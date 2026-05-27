@@ -2,7 +2,6 @@ package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,11 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -29,10 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.components.EmptyState
+import com.example.projetoacademia.components.InfoLine
+import com.example.projetoacademia.components.ListHeader
+import com.example.projetoacademia.components.PrettyCard
+import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Treino
 
@@ -85,11 +84,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
         val treino = Treino(alunoSelecionado, tipoTreino, grupoMuscular, exercicios, series, repeticoes, observacoes)
         val index = indiceEditando
 
-        if (index == null) {
-            treinos.add(treino)
-        } else {
-            treinos[index] = treino
-        }
+        if (index == null) treinos.add(treino) else treinos[index] = treino
 
         limparFormulario()
     }
@@ -107,8 +102,9 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Monte treinos vinculados aos alunos e mantenha os exercícios sempre atualizados.",
+            text = "Monte treinos vinculados aos alunos com cards objetivos, organizados por tipo, aluno e grupo muscular.",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
@@ -124,18 +120,17 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Treinos cadastrados",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+        ListHeader(
+            title = "Treinos cadastrados",
+            count = treinos.size
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (treinos.isEmpty()) {
-            Text(text = "Nenhum treino cadastrado ainda.")
+            EmptyState(message = "Nenhum treino cadastrado ainda. Cadastre alunos primeiro e depois monte os treinos.")
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 treinos.forEachIndexed { index, treino ->
                     TreinoCard(
                         treino = treino,
@@ -295,52 +290,19 @@ fun TreinoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
-    var menuAberto by remember { mutableStateOf(false) }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = treino.tipoTreino, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Aluno: ${treino.aluno}")
-
-                if (treino.grupoMuscular.isNotBlank()) Text(text = "Grupo muscular: ${treino.grupoMuscular}")
-                if (treino.exercicios.isNotBlank()) Text(text = "Exercícios: ${treino.exercicios}")
-                if (treino.series.isNotBlank()) Text(text = "Séries: ${treino.series}")
-                if (treino.repeticoes.isNotBlank()) Text(text = "Repetições: ${treino.repeticoes}")
-                if (treino.observacoes.isNotBlank()) Text(text = "Observações: ${treino.observacoes}")
-            }
-
-            Box {
-                IconButton(onClick = { menuAberto = true }) {
-                    Text(text = "⋮")
-                }
-
-                DropdownMenu(
-                    expanded = menuAberto,
-                    onDismissRequest = { menuAberto = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(text = "Editar") },
-                        onClick = {
-                            menuAberto = false
-                            onEditarClick()
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text(text = "Apagar") },
-                        onClick = {
-                            menuAberto = false
-                            onExcluirClick()
-                        }
-                    )
-                }
-            }
-        }
+    PrettyCard(
+        avatarText = treino.tipoTreino,
+        title = treino.tipoTreino,
+        subtitle = "Aluno: ${treino.aluno}",
+        status = {
+            StatusBadge(text = treino.grupoMuscular.ifBlank { "Treino" })
+        },
+        onEditarClick = onEditarClick,
+        onExcluirClick = onExcluirClick
+    ) {
+        InfoLine(label = "Exercícios", value = treino.exercicios)
+        InfoLine(label = "Séries", value = treino.series)
+        InfoLine(label = "Repetições", value = treino.repeticoes)
+        InfoLine(label = "Observações", value = treino.observacoes)
     }
 }
