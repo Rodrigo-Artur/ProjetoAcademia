@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
@@ -63,16 +64,71 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
         mostrarFormulario = false
     }
 
+    fun salvarPagamento() {
+        val valorConvertido = valor.replace(",", ".").toDoubleOrNull()
+
+        if (alunos.isEmpty()) {
+            mensagemErro = "É necessário cadastrar um aluno antes de registrar pagamentos"
+            return
+        }
+
+        if (planos.isEmpty()) {
+            mensagemErro = "É necessário cadastrar um plano antes de registrar pagamentos"
+            return
+        }
+
+        if (alunoSelecionado.isBlank()) {
+            mensagemErro = "Selecione um aluno"
+            return
+        }
+
+        if (planoSelecionado.isBlank()) {
+            mensagemErro = "Selecione um plano"
+            return
+        }
+
+        if (valorConvertido == null) {
+            mensagemErro = "Informe um valor válido"
+            return
+        }
+
+        if (valorConvertido <= 0.0) {
+            mensagemErro = "O valor do pagamento deve ser maior que zero"
+            return
+        }
+
+        if (situacaoSelecionada.isBlank()) {
+            mensagemErro = "Selecione a situação do pagamento"
+            return
+        }
+
+        val pagamento = Pagamento(
+            aluno = alunoSelecionado,
+            plano = planoSelecionado,
+            data = data,
+            valor = valorConvertido,
+            formaPagamento = formaPagamento,
+            situacao = situacaoSelecionada
+        )
+
+        val index = indiceEditando
+
+        if (index == null) {
+            pagamentos.add(pagamento)
+        } else {
+            pagamentos[index] = pagamento
+        }
+
+        limparFormulario()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
-            text = if (indiceEditando == null) "Pagamentos" else "Editar Pagamento",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text(text = "Pagamentos", style = MaterialTheme.typography.headlineMedium)
 
         Text(
             text = "Registre, edite e remova pagamentos vinculados aos alunos e planos.",
@@ -80,208 +136,17 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
-        if (!mostrarFormulario && indiceEditando == null) {
-            Button(
-                onClick = { mostrarFormulario = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Registrar pagamento")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                limparFormulario()
+                mostrarFormulario = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Registrar pagamento")
         }
 
-        if (mostrarFormulario || indiceEditando != null) {
-            Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (alunos.isEmpty()) {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                ) {
-                    Text(
-                        text = "Cadastre pelo menos um aluno antes de registrar pagamentos.",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    alunos.forEach { aluno ->
-                        FilterChip(
-                            selected = alunoSelecionado == aluno.nome,
-                            onClick = { alunoSelecionado = aluno.nome },
-                            label = { Text(text = aluno.nome) }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "Plano", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (planos.isEmpty()) {
-                OutlinedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                ) {
-                    Text(
-                        text = "Cadastre pelo menos um plano antes de registrar pagamentos.",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    planos.forEach { plano ->
-                        FilterChip(
-                            selected = planoSelecionado == plano.nome,
-                            onClick = {
-                                planoSelecionado = plano.nome
-                                valor = plano.valor.toString()
-                            },
-                            label = { Text(text = "${plano.nome} - R$ ${String.format("%.2f", plano.valor)}") }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = data,
-                onValueChange = { data = it },
-                label = { Text(text = "Data") },
-                placeholder = { Text(text = "Ex: 20/05/2026") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = valor,
-                onValueChange = { valor = it },
-                label = { Text(text = "Valor") },
-                placeholder = { Text(text = "Ex: 89.90") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = mensagemErro.contains("valor", ignoreCase = true)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = formaPagamento,
-                onValueChange = { formaPagamento = it },
-                label = { Text(text = "Forma de pagamento") },
-                placeholder = { Text(text = "Ex: Pix, dinheiro, cartão") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(text = "Situação", style = MaterialTheme.typography.titleMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                situacoes.forEach { situacao ->
-                    FilterChip(
-                        selected = situacaoSelecionada == situacao,
-                        onClick = { situacaoSelecionada = situacao },
-                        label = { Text(text = situacao) }
-                    )
-                }
-            }
-
-            if (mensagemErro.isNotBlank()) {
-                Text(
-                    text = mensagemErro,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    val valorConvertido = valor.replace(",", ".").toDoubleOrNull()
-
-                    if (alunos.isEmpty()) {
-                        mensagemErro = "É necessário cadastrar um aluno antes de registrar pagamentos"
-                        return@Button
-                    }
-
-                    if (planos.isEmpty()) {
-                        mensagemErro = "É necessário cadastrar um plano antes de registrar pagamentos"
-                        return@Button
-                    }
-
-                    if (alunoSelecionado.isBlank()) {
-                        mensagemErro = "Selecione um aluno"
-                        return@Button
-                    }
-
-                    if (planoSelecionado.isBlank()) {
-                        mensagemErro = "Selecione um plano"
-                        return@Button
-                    }
-
-                    if (valorConvertido == null) {
-                        mensagemErro = "Informe um valor válido"
-                        return@Button
-                    }
-
-                    if (valorConvertido <= 0.0) {
-                        mensagemErro = "O valor do pagamento deve ser maior que zero"
-                        return@Button
-                    }
-
-                    if (situacaoSelecionada.isBlank()) {
-                        mensagemErro = "Selecione a situação do pagamento"
-                        return@Button
-                    }
-
-                    val pagamento = Pagamento(
-                        aluno = alunoSelecionado,
-                        plano = planoSelecionado,
-                        data = data,
-                        valor = valorConvertido,
-                        formaPagamento = formaPagamento,
-                        situacao = situacaoSelecionada
-                    )
-
-                    val index = indiceEditando
-
-                    if (index == null) {
-                        pagamentos.add(pagamento)
-                    } else {
-                        pagamentos[index] = pagamento
-                    }
-
-                    limparFormulario()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = if (indiceEditando == null) "Salvar pagamento" else "Atualizar pagamento")
-            }
-
-            OutlinedButton(
-                onClick = { limparFormulario() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Text(text = "Cancelar")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(text = "Pagamentos registrados", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(12.dp))
@@ -319,6 +184,144 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
         ) {
             Text(text = "Voltar")
         }
+    }
+
+    if (mostrarFormulario) {
+        AlertDialog(
+            onDismissRequest = { limparFormulario() },
+            title = {
+                Text(text = if (indiceEditando == null) "Registrar pagamento" else "Editar pagamento")
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (alunos.isEmpty()) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                        ) {
+                            Text(
+                                text = "Cadastre pelo menos um aluno antes de registrar pagamentos.",
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            alunos.forEach { aluno ->
+                                FilterChip(
+                                    selected = alunoSelecionado == aluno.nome,
+                                    onClick = { alunoSelecionado = aluno.nome },
+                                    label = { Text(text = aluno.nome) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(text = "Plano", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (planos.isEmpty()) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                        ) {
+                            Text(
+                                text = "Cadastre pelo menos um plano antes de registrar pagamentos.",
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            planos.forEach { plano ->
+                                FilterChip(
+                                    selected = planoSelecionado == plano.nome,
+                                    onClick = {
+                                        planoSelecionado = plano.nome
+                                        valor = plano.valor.toString()
+                                    },
+                                    label = { Text(text = "${plano.nome} - R$ ${String.format("%.2f", plano.valor)}") }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedTextField(
+                        value = data,
+                        onValueChange = { data = it },
+                        label = { Text(text = "Data") },
+                        placeholder = { Text(text = "Ex: 20/05/2026") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = valor,
+                        onValueChange = { valor = it },
+                        label = { Text(text = "Valor") },
+                        placeholder = { Text(text = "Ex: 89.90") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = mensagemErro.contains("valor", ignoreCase = true)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = formaPagamento,
+                        onValueChange = { formaPagamento = it },
+                        label = { Text(text = "Forma de pagamento") },
+                        placeholder = { Text(text = "Ex: Pix, dinheiro, cartão") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(text = "Situação", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        situacoes.forEach { situacao ->
+                            FilterChip(
+                                selected = situacaoSelecionada == situacao,
+                                onClick = { situacaoSelecionada = situacao },
+                                label = { Text(text = situacao) }
+                            )
+                        }
+                    }
+
+                    if (mensagemErro.isNotBlank()) {
+                        Text(
+                            text = mensagemErro,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { salvarPagamento() }) {
+                    Text(text = if (indiceEditando == null) "Salvar" else "Atualizar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { limparFormulario() }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
 }
 
