@@ -34,6 +34,20 @@ fun HomeScreen(
     val alunosAtivos = AppData.alunos.count { it.ativo }
     val alunosInativos = totalAlunos - alunosAtivos
 
+    val valorRecebido = AppData.pagamentos
+        .filter { it.situacao == "Pago" }
+        .sumOf { it.valor }
+
+    val valorPendente = AppData.pagamentos
+        .filter { it.situacao == "Pendente" }
+        .sumOf { it.valor }
+
+    val valorAtrasado = AppData.pagamentos
+        .filter { it.situacao == "Atrasado" }
+        .sumOf { it.valor }
+
+    val remuneracaoTotal = valorRecebido + valorPendente + valorAtrasado
+
     val alunosPorPlano = AppData.planos.map { plano ->
         DonutSegment(
             label = plano.nome,
@@ -46,6 +60,12 @@ fun HomeScreen(
         DonutSegment("Pagos", AppData.pagamentos.count { it.situacao == "Pago" }, Color(0xFF2E7D32)),
         DonutSegment("Pendentes", AppData.pagamentos.count { it.situacao == "Pendente" }, Color(0xFFF9A825)),
         DonutSegment("Atrasados", AppData.pagamentos.count { it.situacao == "Atrasado" }, Color(0xFFC62828))
+    )
+
+    val valoresFinanceiros = listOf(
+        DonutSegment("Recebido: ${formatarDinheiro(valorRecebido)}", valorRecebido.toInt(), Color(0xFF2E7D32)),
+        DonutSegment("Pendente: ${formatarDinheiro(valorPendente)}", valorPendente.toInt(), Color(0xFFF9A825)),
+        DonutSegment("Atrasado: ${formatarDinheiro(valorAtrasado)}", valorAtrasado.toInt(), Color(0xFFC62828))
     )
 
     val alunosPorTreinador = AppData.treinadores.map { treinador ->
@@ -87,8 +107,15 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                MetricCard("Planos", AppData.planos.size.toString(), Modifier.weight(1f))
-                MetricCard("Treinadores", AppData.treinadores.size.toString(), Modifier.weight(1f))
+                MetricCard("Total financeiro", formatarDinheiro(remuneracaoTotal), Modifier.weight(1f))
+                MetricCard("Recebido", formatarDinheiro(valorRecebido), Modifier.weight(1f))
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                MetricCard("Pendente", formatarDinheiro(valorPendente), Modifier.weight(1f))
+                MetricCard("Atrasado", formatarDinheiro(valorAtrasado), Modifier.weight(1f))
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -115,9 +142,18 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             DonutChartCard(
-                title = "Pagamentos por situação",
+                title = "Pagamentos por quantidade",
                 subtitle = "Pagos, pendentes e atrasados separados por cor",
                 segments = pagamentosPorStatus,
+                onClick = onNavigateToPagamentos
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            DonutChartCard(
+                title = "Resumo financeiro",
+                subtitle = "Total: ${formatarDinheiro(remuneracaoTotal)}",
+                segments = valoresFinanceiros,
                 onClick = onNavigateToPagamentos
             )
 
@@ -142,7 +178,7 @@ fun MetricCard(title: String, value: String, modifier: Modifier = Modifier) {
         Column(modifier = Modifier.padding(18.dp)) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
 
@@ -154,6 +190,10 @@ fun MetricCard(title: String, value: String, modifier: Modifier = Modifier) {
             )
         }
     }
+}
+
+fun formatarDinheiro(valor: Double): String {
+    return "R$ ${String.format("%.2f", valor)}"
 }
 
 fun corDoPlano(nome: String): Color {
