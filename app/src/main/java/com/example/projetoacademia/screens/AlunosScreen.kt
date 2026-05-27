@@ -2,6 +2,7 @@ package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,8 +16,10 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Aluno
@@ -72,16 +76,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val aluno = Aluno(
-            nome = nome,
-            cpf = cpf,
-            telefone = telefone,
-            dataNascimento = dataNascimento,
-            email = email,
-            objetivo = objetivo,
-            ativo = ativo
-        )
-
+        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo)
         val index = indiceEditando
 
         if (index == null) {
@@ -100,12 +95,13 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             .padding(24.dp)
     ) {
         Text(
-            text = "Alunos",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Gerenciamento de alunos",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
         )
 
         Text(
-            text = "Cadastre, edite e remova alunos da academia.",
+            text = "Cadastre novos alunos, acompanhe seus dados e use o menu de cada card para editar ou apagar registros.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
@@ -124,7 +120,8 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
 
         Text(
             text = "Alunos cadastrados",
-            style = MaterialTheme.typography.titleLarge
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -161,20 +158,16 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             onClick = onVoltarClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Voltar")
+            Text(text = "Voltar ao início")
         }
     }
 
     if (mostrarFormulario) {
         AlertDialog(
             onDismissRequest = { limparFormulario() },
-            title = {
-                Text(text = if (indiceEditando == null) "Cadastrar aluno" else "Editar aluno")
-            },
+            title = { Text(text = if (indiceEditando == null) "Cadastrar aluno" else "Editar aluno") },
             text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     OutlinedTextField(
                         value = nome,
                         onValueChange = { nome = it },
@@ -234,11 +227,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Checkbox(
-                            checked = ativo,
-                            onCheckedChange = { ativo = it }
-                        )
-
+                        Checkbox(checked = ativo, onCheckedChange = { ativo = it })
                         Text(text = "Aluno ativo")
                     }
 
@@ -271,6 +260,8 @@ fun AlunoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
+    var menuAberto by remember { mutableStateOf(false) }
+
     val corDeFundo = if (aluno.ativo) {
         MaterialTheme.colorScheme.surfaceVariant
     } else {
@@ -278,34 +269,52 @@ fun AlunoCard(
     }
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(corDeFundo)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = aluno.nome, style = MaterialTheme.typography.titleMedium)
-            Text(text = "CPF: ${aluno.cpf}")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = aluno.nome, style = MaterialTheme.typography.titleMedium)
+                Text(text = "CPF: ${aluno.cpf}")
 
-            if (aluno.telefone.isNotBlank()) Text(text = "Telefone: ${aluno.telefone}")
-            if (aluno.dataNascimento.isNotBlank()) Text(text = "Nascimento: ${aluno.dataNascimento}")
-            if (aluno.email.isNotBlank()) Text(text = "Email: ${aluno.email}")
-            if (aluno.objetivo.isNotBlank()) Text(text = "Objetivo: ${aluno.objetivo}")
+                if (aluno.telefone.isNotBlank()) Text(text = "Telefone: ${aluno.telefone}")
+                if (aluno.dataNascimento.isNotBlank()) Text(text = "Nascimento: ${aluno.dataNascimento}")
+                if (aluno.email.isNotBlank()) Text(text = "Email: ${aluno.email}")
+                if (aluno.objetivo.isNotBlank()) Text(text = "Objetivo: ${aluno.objetivo}")
 
-            Text(
-                text = if (aluno.ativo) "Status: Ativo" else "Status: Inativo",
-                color = if (aluno.ativo) Color(0xFF2E7D32) else Color(0xFFC62828)
-            )
+                Text(
+                    text = if (aluno.ativo) "Status: Ativo" else "Status: Inativo",
+                    color = if (aluno.ativo) Color(0xFF2E7D32) else Color(0xFFC62828)
+                )
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onEditarClick) {
-                    Text(text = "Editar")
+            Box {
+                IconButton(onClick = { menuAberto = true }) {
+                    Text(text = "⋮")
                 }
 
-                OutlinedButton(onClick = onExcluirClick) {
-                    Text(text = "Apagar")
+                DropdownMenu(
+                    expanded = menuAberto,
+                    onDismissRequest = { menuAberto = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Editar") },
+                        onClick = {
+                            menuAberto = false
+                            onEditarClick()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text(text = "Apagar") },
+                        onClick = {
+                            menuAberto = false
+                            onExcluirClick()
+                        }
+                    )
                 }
             }
         }
