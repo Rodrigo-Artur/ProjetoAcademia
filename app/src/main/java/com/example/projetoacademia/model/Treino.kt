@@ -8,5 +8,6 @@ data class Treino(
     val series: String,
     val repeticoes: String,
     val observacoes: String,
-    val exerciciosSelecionados: List<String> = emptyList()
+    val exerciciosSelecionados: List<String> = emptyList(),
+    val detalhesExercicios: List<ExercicioDoTreino> = emptyList()
 )
