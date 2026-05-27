@@ -1,9 +1,7 @@
 package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,10 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,10 +20,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.components.EmptyState
+import com.example.projetoacademia.components.InfoLine
+import com.example.projetoacademia.components.ListHeader
+import com.example.projetoacademia.components.PrettyCard
+import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Plano
 
@@ -77,11 +75,7 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         val plano = Plano(nome, valorConvertido, duracao, descricao)
         val index = indiceEditando
 
-        if (index == null) {
-            planos.add(plano)
-        } else {
-            planos[index] = plano
-        }
+        if (index == null) planos.add(plano) else planos[index] = plano
 
         limparFormulario()
     }
@@ -99,8 +93,9 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Organize os planos da academia, seus valores, durações e descrições comerciais.",
+            text = "Organize os planos da academia com cards mais claros, contagem de registros e ações no menu lateral de cada card.",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
@@ -116,18 +111,17 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Planos cadastrados",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+        ListHeader(
+            title = "Planos cadastrados",
+            count = planos.size
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (planos.isEmpty()) {
-            Text(text = "Nenhum plano cadastrado ainda.")
+            EmptyState(message = "Nenhum plano cadastrado ainda. Clique em Cadastrar plano para criar o primeiro.")
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 planos.forEachIndexed { index, plano ->
                     PlanoCard(
                         plano = plano,
@@ -233,49 +227,17 @@ fun PlanoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
-    var menuAberto by remember { mutableStateOf(false) }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = plano.nome, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Valor: R$ ${String.format("%.2f", plano.valor)}")
-
-                if (plano.duracao.isNotBlank()) Text(text = "Duração: ${plano.duracao}")
-                if (plano.descricao.isNotBlank()) Text(text = "Descrição: ${plano.descricao}")
-            }
-
-            Box {
-                IconButton(onClick = { menuAberto = true }) {
-                    Text(text = "⋮")
-                }
-
-                DropdownMenu(
-                    expanded = menuAberto,
-                    onDismissRequest = { menuAberto = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(text = "Editar") },
-                        onClick = {
-                            menuAberto = false
-                            onEditarClick()
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text(text = "Apagar") },
-                        onClick = {
-                            menuAberto = false
-                            onExcluirClick()
-                        }
-                    )
-                }
-            }
-        }
+    PrettyCard(
+        avatarText = plano.nome,
+        title = plano.nome,
+        subtitle = plano.descricao.ifBlank { "Sem descrição" },
+        status = {
+            StatusBadge(text = "R$ ${String.format("%.2f", plano.valor)}")
+        },
+        onEditarClick = onEditarClick,
+        onExcluirClick = onExcluirClick
+    ) {
+        InfoLine(label = "Duração", value = plano.duracao)
+        InfoLine(label = "Valor", value = "R$ ${String.format("%.2f", plano.valor)}")
     }
 }
