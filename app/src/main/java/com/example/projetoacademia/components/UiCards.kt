@@ -67,11 +67,10 @@ fun ListHeader(
 
 @Composable
 fun EmptyState(message: String) {
-    ElevatedCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
-        ),
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f),
         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))
     ) {
         Text(
@@ -202,14 +201,13 @@ fun PrettyCard(
     onExcluirClick: () -> Unit,
     content: @Composable ColumnScope.() -> Unit
 ) {
-    ElevatedCard(
+    Surface(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 7.dp),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
-        ),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.07f))
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.07f)),
+        tonalElevation = 3.dp,
+        shadowElevation = 7.dp
     ) {
         Row(
             modifier = Modifier
