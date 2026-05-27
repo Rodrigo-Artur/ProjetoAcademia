@@ -1,9 +1,7 @@
 package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,11 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
@@ -30,11 +24,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.components.EmptyState
+import com.example.projetoacademia.components.InfoLine
+import com.example.projetoacademia.components.ListHeader
+import com.example.projetoacademia.components.PrettyCard
+import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Pagamento
 
@@ -118,11 +115,7 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
 
         val index = indiceEditando
 
-        if (index == null) {
-            pagamentos.add(pagamento)
-        } else {
-            pagamentos[index] = pagamento
-        }
+        if (index == null) pagamentos.add(pagamento) else pagamentos[index] = pagamento
 
         limparFormulario()
     }
@@ -140,8 +133,9 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Controle mensalidades, formas de pagamento e situações financeiras dos alunos.",
+            text = "Controle mensalidades com cards financeiros, destaque para atrasos e ações no menu de cada registro.",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
@@ -157,18 +151,17 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Pagamentos registrados",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+        ListHeader(
+            title = "Pagamentos registrados",
+            count = pagamentos.size
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (pagamentos.isEmpty()) {
-            Text(text = "Nenhum pagamento registrado ainda.")
+            EmptyState(message = "Nenhum pagamento registrado ainda. Cadastre alunos e planos antes de registrar pagamentos.")
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 pagamentos.forEachIndexed { index, pagamento ->
                     PagamentoCard(
                         pagamento = pagamento,
@@ -341,63 +334,23 @@ fun PagamentoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
-    var menuAberto by remember { mutableStateOf(false) }
-
     val pagamentoAtrasado = pagamento.situacao == "Atrasado"
-    val corDeFundo = if (pagamentoAtrasado) Color(0xFFFFCDD2) else MaterialTheme.colorScheme.surfaceVariant
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(corDeFundo)
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = pagamento.aluno, style = MaterialTheme.typography.titleMedium)
-                Text(text = "Plano: ${pagamento.plano}")
-
-                if (pagamento.data.isNotBlank()) Text(text = "Data: ${pagamento.data}")
-
-                Text(text = "Valor: R$ ${String.format("%.2f", pagamento.valor)}")
-
-                if (pagamento.formaPagamento.isNotBlank()) {
-                    Text(text = "Forma de pagamento: ${pagamento.formaPagamento}")
-                }
-
-                Text(
-                    text = "Situação: ${pagamento.situacao}",
-                    color = if (pagamentoAtrasado) Color(0xFFC62828) else Color(0xFF2E7D32)
-                )
-            }
-
-            Box {
-                IconButton(onClick = { menuAberto = true }) {
-                    Text(text = "⋮")
-                }
-
-                DropdownMenu(
-                    expanded = menuAberto,
-                    onDismissRequest = { menuAberto = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(text = "Editar") },
-                        onClick = {
-                            menuAberto = false
-                            onEditarClick()
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text(text = "Apagar") },
-                        onClick = {
-                            menuAberto = false
-                            onExcluirClick()
-                        }
-                    )
-                }
-            }
-        }
+    PrettyCard(
+        avatarText = pagamento.aluno,
+        title = pagamento.aluno,
+        subtitle = "Plano: ${pagamento.plano}",
+        status = {
+            StatusBadge(
+                text = pagamento.situacao,
+                alert = pagamentoAtrasado
+            )
+        },
+        onEditarClick = onEditarClick,
+        onExcluirClick = onExcluirClick
+    ) {
+        InfoLine(label = "Data", value = pagamento.data)
+        InfoLine(label = "Valor", value = "R$ ${String.format("%.2f", pagamento.valor)}")
+        InfoLine(label = "Forma de pagamento", value = pagamento.formaPagamento)
     }
 }
