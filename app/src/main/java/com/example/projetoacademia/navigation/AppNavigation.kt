@@ -28,6 +28,7 @@ import com.example.projetoacademia.screens.HomeScreen
 import com.example.projetoacademia.screens.PagamentosScreen
 import com.example.projetoacademia.screens.PlanosScreen
 import com.example.projetoacademia.screens.SobreScreen
+import com.example.projetoacademia.screens.TreinadoresScreen
 import com.example.projetoacademia.screens.TreinosScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,7 +66,8 @@ fun AppNavigation() {
                 HomeScreen(
                     onNavigateToAlunos = { navegarPeloMenu(navController, Routes.ALUNOS) },
                     onNavigateToPlanos = { navegarPeloMenu(navController, Routes.PLANOS) },
-                    onNavigateToPagamentos = { navegarPeloMenu(navController, Routes.PAGAMENTOS) }
+                    onNavigateToPagamentos = { navegarPeloMenu(navController, Routes.PAGAMENTOS) },
+                    onNavigateToTreinadores = { navegarPeloMenu(navController, Routes.TREINADORES) }
                 )
             }
 
@@ -79,6 +81,10 @@ fun AppNavigation() {
 
             composable(Routes.EXERCICIOS) {
                 ExerciciosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
+
+            composable(Routes.TREINADORES) {
+                TreinadoresScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
             }
 
             composable(Routes.TREINOS) {
@@ -106,6 +112,7 @@ fun NavigationCarousel(
         "Alunos" to Routes.ALUNOS,
         "Planos" to Routes.PLANOS,
         "Exercícios" to Routes.EXERCICIOS,
+        "Treinadores" to Routes.TREINADORES,
         "Treinos" to Routes.TREINOS,
         "Pagamentos" to Routes.PAGAMENTOS,
         "Sobre" to Routes.SOBRE
@@ -150,6 +157,7 @@ fun obterTituloDaTela(route: String?): String {
         Routes.ALUNOS -> "Alunos"
         Routes.PLANOS -> "Planos"
         Routes.EXERCICIOS -> "Exercícios"
+        Routes.TREINADORES -> "Treinadores"
         Routes.TREINOS -> "Treinos"
         Routes.PAGAMENTOS -> "Pagamentos"
         Routes.SOBRE -> "Sobre"
