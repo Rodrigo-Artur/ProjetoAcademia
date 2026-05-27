@@ -40,14 +40,13 @@ fun AppNavigation() {
     val scope = rememberCoroutineScope()
 
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val tituloAtual = obterTituloDaTela(currentRoute)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "Projeto Academia",
                         style = MaterialTheme.typography.titleLarge,
@@ -68,9 +67,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.HOME,
                         onClick = {
                             navegarPeloMenu(navController, Routes.HOME)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
 
@@ -79,9 +76,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.ALUNOS,
                         onClick = {
                             navegarPeloMenu(navController, Routes.ALUNOS)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
 
@@ -90,9 +85,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.PLANOS,
                         onClick = {
                             navegarPeloMenu(navController, Routes.PLANOS)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
 
@@ -101,9 +94,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.TREINOS,
                         onClick = {
                             navegarPeloMenu(navController, Routes.TREINOS)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
 
@@ -112,9 +103,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.PAGAMENTOS,
                         onClick = {
                             navegarPeloMenu(navController, Routes.PAGAMENTOS)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
 
@@ -123,9 +112,7 @@ fun AppNavigation() {
                         selected = currentRoute == Routes.SOBRE,
                         onClick = {
                             navegarPeloMenu(navController, Routes.SOBRE)
-                            scope.launch {
-                                drawerState.close()
-                            }
+                            scope.launch { drawerState.close() }
                         }
                     )
                 }
@@ -136,14 +123,12 @@ fun AppNavigation() {
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(text = "Sistema Academia")
+                        Text(text = "Sistema Academia - $tituloAtual")
                     },
                     navigationIcon = {
                         IconButton(
                             onClick = {
-                                scope.launch {
-                                    drawerState.open()
-                                }
+                                scope.launch { drawerState.open() }
                             }
                         ) {
                             Text(text = "☰")
@@ -162,43 +147,23 @@ fun AppNavigation() {
                 }
 
                 composable(Routes.ALUNOS) {
-                    AlunosScreen(
-                        onVoltarClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                        }
-                    )
+                    AlunosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
 
                 composable(Routes.PLANOS) {
-                    PlanosScreen(
-                        onVoltarClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                        }
-                    )
+                    PlanosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
 
                 composable(Routes.TREINOS) {
-                    TreinosScreen(
-                        onVoltarClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                        }
-                    )
+                    TreinosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
 
                 composable(Routes.PAGAMENTOS) {
-                    PagamentosScreen(
-                        onVoltarClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                        }
-                    )
+                    PagamentosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
 
                 composable(Routes.SOBRE) {
-                    SobreScreen(
-                        onVoltarClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                        }
-                    )
+                    SobreScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
             }
         }
@@ -212,9 +177,7 @@ fun DrawerMenuItem(
     onClick: () -> Unit
 ) {
     NavigationDrawerItem(
-        label = {
-            Text(text = text)
-        },
+        label = { Text(text = text) },
         selected = selected,
         onClick = onClick,
         modifier = Modifier.padding(top = 8.dp)
@@ -226,11 +189,19 @@ fun navegarPeloMenu(
     route: String
 ) {
     navController.navigate(route) {
-        popUpTo(Routes.HOME) {
-            saveState = true
-        }
-
+        popUpTo(Routes.HOME) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+fun obterTituloDaTela(route: String?): String {
+    return when (route) {
+        Routes.ALUNOS -> "Alunos"
+        Routes.PLANOS -> "Planos"
+        Routes.TREINOS -> "Treinos"
+        Routes.PAGAMENTOS -> "Pagamentos"
+        Routes.SOBRE -> "Sobre"
+        else -> "Início"
     }
 }
