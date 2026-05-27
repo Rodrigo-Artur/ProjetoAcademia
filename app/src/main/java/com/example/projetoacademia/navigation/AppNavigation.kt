@@ -25,6 +25,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.projetoacademia.screens.AlunosScreen
+import com.example.projetoacademia.screens.ExerciciosScreen
 import com.example.projetoacademia.screens.HomeScreen
 import com.example.projetoacademia.screens.PagamentosScreen
 import com.example.projetoacademia.screens.PlanosScreen
@@ -62,59 +63,40 @@ fun AppNavigation() {
 
                     HorizontalDivider()
 
-                    DrawerMenuItem(
-                        text = "Início",
-                        selected = currentRoute == Routes.HOME,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.HOME)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Início", currentRoute == Routes.HOME) {
+                        navegarPeloMenu(navController, Routes.HOME)
+                        scope.launch { drawerState.close() }
+                    }
 
-                    DrawerMenuItem(
-                        text = "Alunos",
-                        selected = currentRoute == Routes.ALUNOS,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.ALUNOS)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Alunos", currentRoute == Routes.ALUNOS) {
+                        navegarPeloMenu(navController, Routes.ALUNOS)
+                        scope.launch { drawerState.close() }
+                    }
 
-                    DrawerMenuItem(
-                        text = "Planos",
-                        selected = currentRoute == Routes.PLANOS,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.PLANOS)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Planos", currentRoute == Routes.PLANOS) {
+                        navegarPeloMenu(navController, Routes.PLANOS)
+                        scope.launch { drawerState.close() }
+                    }
 
-                    DrawerMenuItem(
-                        text = "Treinos",
-                        selected = currentRoute == Routes.TREINOS,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.TREINOS)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Exercícios", currentRoute == Routes.EXERCICIOS) {
+                        navegarPeloMenu(navController, Routes.EXERCICIOS)
+                        scope.launch { drawerState.close() }
+                    }
 
-                    DrawerMenuItem(
-                        text = "Pagamentos",
-                        selected = currentRoute == Routes.PAGAMENTOS,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.PAGAMENTOS)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Treinos", currentRoute == Routes.TREINOS) {
+                        navegarPeloMenu(navController, Routes.TREINOS)
+                        scope.launch { drawerState.close() }
+                    }
 
-                    DrawerMenuItem(
-                        text = "Sobre",
-                        selected = currentRoute == Routes.SOBRE,
-                        onClick = {
-                            navegarPeloMenu(navController, Routes.SOBRE)
-                            scope.launch { drawerState.close() }
-                        }
-                    )
+                    DrawerMenuItem("Pagamentos", currentRoute == Routes.PAGAMENTOS) {
+                        navegarPeloMenu(navController, Routes.PAGAMENTOS)
+                        scope.launch { drawerState.close() }
+                    }
+
+                    DrawerMenuItem("Sobre", currentRoute == Routes.SOBRE) {
+                        navegarPeloMenu(navController, Routes.SOBRE)
+                        scope.launch { drawerState.close() }
+                    }
                 }
             }
         }
@@ -129,15 +111,8 @@ fun AppNavigation() {
                         )
                     },
                     navigationIcon = {
-                        IconButton(
-                            onClick = {
-                                scope.launch { drawerState.open() }
-                            }
-                        ) {
-                            Text(
-                                text = "☰",
-                                fontWeight = FontWeight.Bold
-                            )
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Text(text = "☰", fontWeight = FontWeight.Bold)
                         }
                     }
                 )
@@ -158,6 +133,10 @@ fun AppNavigation() {
 
                 composable(Routes.PLANOS) {
                     PlanosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+                }
+
+                composable(Routes.EXERCICIOS) {
+                    ExerciciosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
                 }
 
                 composable(Routes.TREINOS) {
@@ -205,6 +184,7 @@ fun obterTituloDaTela(route: String?): String {
     return when (route) {
         Routes.ALUNOS -> "Alunos"
         Routes.PLANOS -> "Planos"
+        Routes.EXERCICIOS -> "Exercícios"
         Routes.TREINOS -> "Treinos"
         Routes.PAGAMENTOS -> "Pagamentos"
         Routes.SOBRE -> "Sobre"
