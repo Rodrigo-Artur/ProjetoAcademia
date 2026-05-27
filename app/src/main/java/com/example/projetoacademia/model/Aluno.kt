@@ -8,5 +8,6 @@ data class Aluno(
     val email: String,
     val objetivo: String,
     val ativo: Boolean,
-    val fotoUri: String = ""
+    val fotoUri: String = "",
+    val plano: String = ""
 )
