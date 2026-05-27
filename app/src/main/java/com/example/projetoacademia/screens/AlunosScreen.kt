@@ -40,6 +40,7 @@ import com.example.projetoacademia.model.Aluno
 @Composable
 fun AlunosScreen(onVoltarClick: () -> Unit) {
     val alunos = AppData.alunos
+    val planos = AppData.planos
 
     var nome by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
@@ -49,6 +50,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
     var objetivo by remember { mutableStateOf("") }
     var ativo by remember { mutableStateOf(true) }
     var fotoUri by remember { mutableStateOf("") }
+    var planoSelecionado by remember { mutableStateOf("") }
 
     var busca by remember { mutableStateOf("") }
     var filtroStatus by remember { mutableStateOf("Todos") }
@@ -60,7 +62,8 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         val bateBusca = busca.isBlank() ||
                 aluno.nome.contains(busca, ignoreCase = true) ||
                 aluno.cpf.contains(busca, ignoreCase = true) ||
-                aluno.objetivo.contains(busca, ignoreCase = true)
+                aluno.objetivo.contains(busca, ignoreCase = true) ||
+                aluno.plano.contains(busca, ignoreCase = true)
 
         val bateStatus = when (filtroStatus) {
             "Ativos" -> aluno.ativo
@@ -80,6 +83,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         objetivo = ""
         ativo = true
         fotoUri = ""
+        planoSelecionado = ""
         mensagemErro = ""
         indiceEditando = null
         mostrarFormulario = false
@@ -96,7 +100,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo, fotoUri)
+        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo, fotoUri, planoSelecionado)
         val index = indiceEditando
 
         if (index == null) alunos.add(aluno) else alunos[index] = aluno
@@ -117,7 +121,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Pesquise alunos, filtre por status e cadastre fotos para deixar os perfis mais fáceis de identificar.",
+            text = "Pesquise alunos, filtre por status, vincule planos e cadastre fotos para identificar perfis rapidamente.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
@@ -139,7 +143,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             value = busca,
             onValueChange = { busca = it },
             label = { Text(text = "Pesquisar aluno") },
-            placeholder = { Text(text = "Busque por nome, CPF ou objetivo") },
+            placeholder = { Text(text = "Busque por nome, CPF, objetivo ou plano") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -181,6 +185,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
                             objetivo = aluno.objetivo
                             ativo = aluno.ativo
                             fotoUri = aluno.fotoUri
+                            planoSelecionado = aluno.plano
                             mensagemErro = ""
                             indiceEditando = index
                             mostrarFormulario = true
@@ -198,7 +203,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             onClick = onVoltarClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Voltar ao início")
+            Text(text = "Voltar ao dashboard")
         }
     }
 
@@ -274,6 +279,28 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    Text(text = "Plano", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (planos.isEmpty()) {
+                        Text(
+                            text = "Nenhum plano cadastrado ainda.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            planos.forEach { plano ->
+                                FilterChip(
+                                    selected = planoSelecionado == plano.nome,
+                                    onClick = { planoSelecionado = plano.nome },
+                                    label = { Text(text = plano.nome) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = ativo, onCheckedChange = { ativo = it })
                         Text(text = "Aluno ativo")
@@ -326,6 +353,7 @@ fun AlunoCard(
             MediaImagePreview(imageUri = aluno.fotoUri)
         }
 
+        InfoLine(label = "Plano", value = aluno.plano)
         InfoLine(label = "CPF", value = aluno.cpf)
         InfoLine(label = "Telefone", value = aluno.telefone)
         InfoLine(label = "Nascimento", value = aluno.dataNascimento)
