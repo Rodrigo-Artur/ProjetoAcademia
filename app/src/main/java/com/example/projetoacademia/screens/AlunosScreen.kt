@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projetoacademia.components.EmptyState
+import com.example.projetoacademia.components.ImagePickerField
 import com.example.projetoacademia.components.InfoLine
 import com.example.projetoacademia.components.ListHeader
+import com.example.projetoacademia.components.MediaImagePreview
 import com.example.projetoacademia.components.PrettyCard
 import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
@@ -45,10 +48,28 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
     var email by remember { mutableStateOf("") }
     var objetivo by remember { mutableStateOf("") }
     var ativo by remember { mutableStateOf(true) }
+    var fotoUri by remember { mutableStateOf("") }
 
+    var busca by remember { mutableStateOf("") }
+    var filtroStatus by remember { mutableStateOf("Todos") }
     var mensagemErro by remember { mutableStateOf("") }
     var indiceEditando by remember { mutableStateOf<Int?>(null) }
     var mostrarFormulario by remember { mutableStateOf(false) }
+
+    val alunosFiltrados = alunos.filter { aluno ->
+        val bateBusca = busca.isBlank() ||
+                aluno.nome.contains(busca, ignoreCase = true) ||
+                aluno.cpf.contains(busca, ignoreCase = true) ||
+                aluno.objetivo.contains(busca, ignoreCase = true)
+
+        val bateStatus = when (filtroStatus) {
+            "Ativos" -> aluno.ativo
+            "Inativos" -> !aluno.ativo
+            else -> true
+        }
+
+        bateBusca && bateStatus
+    }
 
     fun limparFormulario() {
         nome = ""
@@ -58,6 +79,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         email = ""
         objetivo = ""
         ativo = true
+        fotoUri = ""
         mensagemErro = ""
         indiceEditando = null
         mostrarFormulario = false
@@ -74,7 +96,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo)
+        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo, fotoUri)
         val index = indiceEditando
 
         if (index == null) alunos.add(aluno) else alunos[index] = aluno
@@ -95,7 +117,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Visualize os alunos em cards, acompanhe o status e use o menu de três pontos para editar ou apagar registros.",
+            text = "Pesquise alunos, filtre por status e cadastre fotos para deixar os perfis mais fáceis de identificar.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
@@ -111,20 +133,43 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             Text(text = "Cadastrar aluno")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        ListHeader(
-            title = "Alunos cadastrados",
-            count = alunos.size
+        OutlinedTextField(
+            value = busca,
+            onValueChange = { busca = it },
+            label = { Text(text = "Pesquisar aluno") },
+            placeholder = { Text(text = "Busque por nome, CPF ou objetivo") },
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (alunos.isEmpty()) {
-            EmptyState(message = "Nenhum aluno cadastrado ainda. Clique em Cadastrar aluno para começar.")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf("Todos", "Ativos", "Inativos").forEach { status ->
+                FilterChip(
+                    selected = filtroStatus == status,
+                    onClick = { filtroStatus = status },
+                    label = { Text(text = status) }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        ListHeader(
+            title = "Alunos encontrados",
+            count = alunosFiltrados.size
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (alunosFiltrados.isEmpty()) {
+            EmptyState(message = "Nenhum aluno encontrado. Cadastre um aluno ou ajuste sua pesquisa.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                alunos.forEachIndexed { index, aluno ->
+                alunosFiltrados.forEach { aluno ->
+                    val index = alunos.indexOf(aluno)
                     AlunoCard(
                         aluno = aluno,
                         onEditarClick = {
@@ -135,12 +180,13 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
                             email = aluno.email
                             objetivo = aluno.objetivo
                             ativo = aluno.ativo
+                            fotoUri = aluno.fotoUri
                             mensagemErro = ""
                             indiceEditando = index
                             mostrarFormulario = true
                         },
                         onExcluirClick = {
-                            alunos.removeAt(index)
+                            alunos.remove(aluno)
                             limparFormulario()
                         }
                     )
@@ -162,6 +208,14 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             title = { Text(text = if (indiceEditando == null) "Cadastrar aluno" else "Editar aluno") },
             text = {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    ImagePickerField(
+                        label = "Selecionar foto do aluno",
+                        imageUri = fotoUri,
+                        onImageSelected = { fotoUri = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     OutlinedTextField(
                         value = nome,
                         onValueChange = { nome = it },
@@ -267,6 +321,11 @@ fun AlunoCard(
         onEditarClick = onEditarClick,
         onExcluirClick = onExcluirClick
     ) {
+        if (aluno.fotoUri.isNotBlank()) {
+            Spacer(modifier = Modifier.height(8.dp))
+            MediaImagePreview(imageUri = aluno.fotoUri)
+        }
+
         InfoLine(label = "CPF", value = aluno.cpf)
         InfoLine(label = "Telefone", value = aluno.telefone)
         InfoLine(label = "Nascimento", value = aluno.dataNascimento)
