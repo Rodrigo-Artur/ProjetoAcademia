@@ -20,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -35,6 +36,7 @@ import com.example.projetoacademia.components.PrettyCard
 import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Treino
+import com.example.projetoacademia.navigation.AppCreateActions
 
 @Composable
 fun TreinosScreen(onVoltarClick: () -> Unit) {
@@ -65,9 +67,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                 treino.tipoTreino.contains(busca, ignoreCase = true) ||
                 treino.grupoMuscular.contains(busca, ignoreCase = true) ||
                 treino.exerciciosSelecionados.any { it.contains(busca, ignoreCase = true) }
-
         val bateGrupo = filtroGrupo == "Todos" || treino.grupoMuscular == filtroGrupo
-
         bateBusca && bateGrupo
     }
 
@@ -90,12 +90,10 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             mensagemErro = "É necessário cadastrar um aluno antes de cadastrar treinos"
             return
         }
-
         if (alunoSelecionado.isBlank()) {
             mensagemErro = "Selecione um aluno"
             return
         }
-
         if (tipoTreino.isBlank()) {
             mensagemErro = "Informe o tipo de treino"
             return
@@ -114,8 +112,14 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
 
         val index = indiceEditando
         if (index == null) treinos.add(treino) else treinos[index] = treino
-
         limparFormulario()
+    }
+
+    LaunchedEffect(AppCreateActions.treinos) {
+        if (AppCreateActions.treinos > 0) {
+            limparFormulario()
+            mostrarFormulario = true
+        }
     }
 
     Column(
@@ -131,23 +135,11 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Monte fichas vinculando alunos a exercícios prontos. Use busca e filtros para encontrar treinos rapidamente.",
+            text = "Monte fichas vinculando alunos a exercícios prontos. Use o botão + para criar novos treinos.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
-
-        Button(
-            onClick = {
-                limparFormulario()
-                mostrarFormulario = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Cadastrar treino")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = busca,
@@ -175,15 +167,11 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        ListHeader(
-            title = "Treinos encontrados",
-            count = treinosFiltrados.size
-        )
-
+        ListHeader(title = "Treinos encontrados", count = treinosFiltrados.size)
         Spacer(modifier = Modifier.height(12.dp))
 
         if (treinosFiltrados.isEmpty()) {
-            EmptyState(message = "Nenhum treino encontrado. Cadastre uma ficha ou ajuste busca e filtros.")
+            EmptyState(message = "Nenhum treino encontrado. Toque no botão + para cadastrar ou ajuste os filtros.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 treinosFiltrados.forEach { treino ->
@@ -213,11 +201,8 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             }
         }
 
-        TextButton(
-            onClick = onVoltarClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Voltar ao início")
+        TextButton(onClick = onVoltarClick, modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Voltar ao dashboard")
         }
     }
 
@@ -229,65 +214,28 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                 Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-
                     if (alunos.isEmpty()) {
-                        OutlinedCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
-                        ) {
-                            Text(
-                                text = "Cadastre pelo menos um aluno antes de criar um treino.",
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(16.dp)
-                            )
+                        OutlinedCard(modifier = Modifier.fillMaxWidth(), border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)) {
+                            Text(text = "Cadastre pelo menos um aluno antes de criar um treino.", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
                         }
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             alunos.forEach { aluno ->
-                                FilterChip(
-                                    selected = alunoSelecionado == aluno.nome,
-                                    onClick = { alunoSelecionado = aluno.nome },
-                                    label = { Text(text = aluno.nome) }
-                                )
+                                FilterChip(selected = alunoSelecionado == aluno.nome, onClick = { alunoSelecionado = aluno.nome }, label = { Text(text = aluno.nome) })
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
-
-                    OutlinedTextField(
-                        value = tipoTreino,
-                        onValueChange = { tipoTreino = it },
-                        label = { Text(text = "Tipo de treino") },
-                        placeholder = { Text(text = "Ex: Hipertrofia") },
-                        modifier = Modifier.fillMaxWidth(),
-                        isError = mensagemErro.contains("tipo", ignoreCase = true)
-                    )
-
+                    OutlinedTextField(value = tipoTreino, onValueChange = { tipoTreino = it }, label = { Text(text = "Tipo de treino") }, placeholder = { Text(text = "Ex: Hipertrofia") }, modifier = Modifier.fillMaxWidth(), isError = mensagemErro.contains("tipo", ignoreCase = true))
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = grupoMuscular,
-                        onValueChange = { grupoMuscular = it },
-                        label = { Text(text = "Grupo muscular") },
-                        placeholder = { Text(text = "Ex: Peito") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
+                    OutlinedTextField(value = grupoMuscular, onValueChange = { grupoMuscular = it }, label = { Text(text = "Grupo muscular") }, placeholder = { Text(text = "Ex: Peito") }, modifier = Modifier.fillMaxWidth())
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Text(text = "Exercícios prontos", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-
                     if (exerciciosProntos.isEmpty()) {
-                        OutlinedCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
-                        ) {
-                            Text(
-                                text = "Nenhum exercício pronto cadastrado. Use a aba Exercícios para criar sua biblioteca.",
-                                modifier = Modifier.padding(16.dp)
-                            )
+                        OutlinedCard(modifier = Modifier.fillMaxWidth(), border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)) {
+                            Text(text = "Nenhum exercício pronto cadastrado. Use a aba Exercícios para criar sua biblioteca.", modifier = Modifier.padding(16.dp))
                         }
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -296,11 +244,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                                 FilterChip(
                                     selected = selecionado,
                                     onClick = {
-                                        if (selecionado) {
-                                            exerciciosSelecionados.remove(exercicio.nome)
-                                        } else {
-                                            exerciciosSelecionados.add(exercicio.nome)
-                                        }
+                                        if (selecionado) exerciciosSelecionados.remove(exercicio.nome) else exerciciosSelecionados.add(exercicio.nome)
                                     },
                                     label = { Text(text = "${exercicio.nome} • ${exercicio.categoria}") }
                                 )
@@ -309,56 +253,16 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = exercicios,
-                        onValueChange = { exercicios = it },
-                        label = { Text(text = "Exercícios extras") },
-                        placeholder = { Text(text = "Use apenas se quiser adicionar algo manualmente") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 2
-                    )
-
+                    OutlinedTextField(value = exercicios, onValueChange = { exercicios = it }, label = { Text(text = "Exercícios extras") }, placeholder = { Text(text = "Use apenas se quiser adicionar algo manualmente") }, modifier = Modifier.fillMaxWidth(), minLines = 2)
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = series,
-                            onValueChange = { series = it },
-                            label = { Text(text = "Séries") },
-                            placeholder = { Text(text = "Ex: 4") },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        OutlinedTextField(
-                            value = repeticoes,
-                            onValueChange = { repeticoes = it },
-                            label = { Text(text = "Repetições") },
-                            placeholder = { Text(text = "Ex: 12") },
-                            modifier = Modifier.weight(1f)
-                        )
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        OutlinedTextField(value = series, onValueChange = { series = it }, label = { Text(text = "Séries") }, placeholder = { Text(text = "Ex: 4") }, modifier = Modifier.weight(1f))
+                        OutlinedTextField(value = repeticoes, onValueChange = { repeticoes = it }, label = { Text(text = "Repetições") }, placeholder = { Text(text = "Ex: 12") }, modifier = Modifier.weight(1f))
                     }
-
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = observacoes,
-                        onValueChange = { observacoes = it },
-                        label = { Text(text = "Observações") },
-                        placeholder = { Text(text = "Ex: Aumentar carga a cada semana") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
-                    )
-
+                    OutlinedTextField(value = observacoes, onValueChange = { observacoes = it }, label = { Text(text = "Observações") }, placeholder = { Text(text = "Ex: Aumentar carga a cada semana") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
                     if (mensagemErro.isNotBlank()) {
-                        Text(
-                            text = mensagemErro,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        Text(text = mensagemErro, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
                     }
                 }
             },
