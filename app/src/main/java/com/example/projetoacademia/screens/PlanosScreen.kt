@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -50,16 +51,49 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         mostrarFormulario = false
     }
 
+    fun salvarPlano() {
+        val valorConvertido = valor.replace(",", ".").toDoubleOrNull()
+
+        if (nome.isBlank()) {
+            mensagemErro = "Nome do plano é obrigatório"
+            return
+        }
+
+        if (valorConvertido == null) {
+            mensagemErro = "Informe um valor válido"
+            return
+        }
+
+        if (valorConvertido <= 0.0) {
+            mensagemErro = "O valor do plano deve ser maior que zero"
+            return
+        }
+
+        val plano = Plano(
+            nome = nome,
+            valor = valorConvertido,
+            duracao = duracao,
+            descricao = descricao
+        )
+
+        val index = indiceEditando
+
+        if (index == null) {
+            planos.add(plano)
+        } else {
+            planos[index] = plano
+        }
+
+        limparFormulario()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(
-            text = if (indiceEditando == null) "Planos" else "Editar Plano",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Text(text = "Planos", style = MaterialTheme.typography.headlineMedium)
 
         Text(
             text = "Cadastre, edite e remova planos da academia.",
@@ -67,127 +101,19 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
-        if (!mostrarFormulario && indiceEditando == null) {
-            Button(
-                onClick = { mostrarFormulario = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Cadastrar plano")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                limparFormulario()
+                mostrarFormulario = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Cadastrar plano")
         }
 
-        if (mostrarFormulario || indiceEditando != null) {
-            OutlinedTextField(
-                value = nome,
-                onValueChange = { nome = it },
-                label = { Text(text = "Nome do plano") },
-                placeholder = { Text(text = "Ex: Mensal") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = mensagemErro.contains("Nome")
-            )
+        Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = valor,
-                onValueChange = { valor = it },
-                label = { Text(text = "Valor") },
-                placeholder = { Text(text = "Ex: 89.90") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = mensagemErro.contains("valor", ignoreCase = true)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = duracao,
-                onValueChange = { duracao = it },
-                label = { Text(text = "Duração") },
-                placeholder = { Text(text = "Ex: 1 mês") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = descricao,
-                onValueChange = { descricao = it },
-                label = { Text(text = "Descrição") },
-                placeholder = { Text(text = "Ex: Acesso livre à musculação") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            if (mensagemErro.isNotBlank()) {
-                Text(
-                    text = mensagemErro,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    val valorConvertido = valor.replace(",", ".").toDoubleOrNull()
-
-                    if (nome.isBlank()) {
-                        mensagemErro = "Nome do plano é obrigatório"
-                        return@Button
-                    }
-
-                    if (valorConvertido == null) {
-                        mensagemErro = "Informe um valor válido"
-                        return@Button
-                    }
-
-                    if (valorConvertido <= 0.0) {
-                        mensagemErro = "O valor do plano deve ser maior que zero"
-                        return@Button
-                    }
-
-                    val plano = Plano(
-                        nome = nome,
-                        valor = valorConvertido,
-                        duracao = duracao,
-                        descricao = descricao
-                    )
-
-                    val index = indiceEditando
-
-                    if (index == null) {
-                        planos.add(plano)
-                    } else {
-                        planos[index] = plano
-                    }
-
-                    limparFormulario()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = if (indiceEditando == null) "Salvar plano" else "Atualizar plano")
-            }
-
-            OutlinedButton(
-                onClick = { limparFormulario() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Text(text = "Cancelar")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        Text(
-            text = "Planos cadastrados",
-            style = MaterialTheme.typography.titleLarge
-        )
-
+        Text(text = "Planos cadastrados", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(12.dp))
 
         if (planos.isEmpty()) {
@@ -221,6 +147,79 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         ) {
             Text(text = "Voltar")
         }
+    }
+
+    if (mostrarFormulario) {
+        AlertDialog(
+            onDismissRequest = { limparFormulario() },
+            title = {
+                Text(text = if (indiceEditando == null) "Cadastrar plano" else "Editar plano")
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    OutlinedTextField(
+                        value = nome,
+                        onValueChange = { nome = it },
+                        label = { Text(text = "Nome do plano") },
+                        placeholder = { Text(text = "Ex: Mensal") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = mensagemErro.contains("Nome")
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = valor,
+                        onValueChange = { valor = it },
+                        label = { Text(text = "Valor") },
+                        placeholder = { Text(text = "Ex: 89.90") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = mensagemErro.contains("valor", ignoreCase = true)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = duracao,
+                        onValueChange = { duracao = it },
+                        label = { Text(text = "Duração") },
+                        placeholder = { Text(text = "Ex: 1 mês") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = descricao,
+                        onValueChange = { descricao = it },
+                        label = { Text(text = "Descrição") },
+                        placeholder = { Text(text = "Ex: Acesso livre à musculação") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3
+                    )
+
+                    if (mensagemErro.isNotBlank()) {
+                        Text(
+                            text = mensagemErro,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { salvarPlano() }) {
+                    Text(text = if (indiceEditando == null) "Salvar" else "Atualizar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { limparFormulario() }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
 }
 
