@@ -1,4 +1,3 @@
-
 package com.example.projetoacademia.model
 
 data class Treino(
@@ -8,5 +7,6 @@ data class Treino(
     val exercicios: String,
     val series: String,
     val repeticoes: String,
-    val observacoes: String
+    val observacoes: String,
+    val exerciciosSelecionados: List<String> = emptyList()
 )
