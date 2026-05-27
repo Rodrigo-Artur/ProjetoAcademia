@@ -48,14 +48,14 @@ fun AppNavigation() {
             ModalDrawerSheet {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Projeto Academia",
+                        text = "Sistema Academia",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
                     Text(
-                        text = "Menu de navegação",
+                        text = "Use este menu para navegar entre as páginas.",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -123,7 +123,10 @@ fun AppNavigation() {
             topBar = {
                 TopAppBar(
                     title = {
-                        Text(text = "Sistema Academia - $tituloAtual")
+                        Text(
+                            text = "Sistema Academia - $tituloAtual",
+                            fontWeight = FontWeight.Bold
+                        )
                     },
                     navigationIcon = {
                         IconButton(
@@ -131,7 +134,10 @@ fun AppNavigation() {
                                 scope.launch { drawerState.open() }
                             }
                         ) {
-                            Text(text = "☰")
+                            Text(
+                                text = "☰",
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 )
