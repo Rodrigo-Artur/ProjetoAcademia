@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,6 +40,7 @@ import com.example.projetoacademia.model.Treino
 fun TreinosScreen(onVoltarClick: () -> Unit) {
     val alunos = AppData.alunos
     val treinos = AppData.treinos
+    val exerciciosProntos = AppData.exercicios
 
     var alunoSelecionado by remember { mutableStateOf("") }
     var tipoTreino by remember { mutableStateOf("") }
@@ -47,10 +49,27 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
     var series by remember { mutableStateOf("") }
     var repeticoes by remember { mutableStateOf("") }
     var observacoes by remember { mutableStateOf("") }
+    val exerciciosSelecionados = remember { mutableStateListOf<String>() }
 
+    var busca by remember { mutableStateOf("") }
+    var filtroGrupo by remember { mutableStateOf("Todos") }
     var mensagemErro by remember { mutableStateOf("") }
     var indiceEditando by remember { mutableStateOf<Int?>(null) }
     var mostrarFormulario by remember { mutableStateOf(false) }
+
+    val grupos = listOf("Todos", "Peito", "Costas", "Pernas", "Braços", "Ombros", "Abdômen", "Cardio")
+
+    val treinosFiltrados = treinos.filter { treino ->
+        val bateBusca = busca.isBlank() ||
+                treino.aluno.contains(busca, ignoreCase = true) ||
+                treino.tipoTreino.contains(busca, ignoreCase = true) ||
+                treino.grupoMuscular.contains(busca, ignoreCase = true) ||
+                treino.exerciciosSelecionados.any { it.contains(busca, ignoreCase = true) }
+
+        val bateGrupo = filtroGrupo == "Todos" || treino.grupoMuscular == filtroGrupo
+
+        bateBusca && bateGrupo
+    }
 
     fun limparFormulario() {
         alunoSelecionado = ""
@@ -60,6 +79,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
         series = ""
         repeticoes = ""
         observacoes = ""
+        exerciciosSelecionados.clear()
         mensagemErro = ""
         indiceEditando = null
         mostrarFormulario = false
@@ -81,9 +101,18 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val treino = Treino(alunoSelecionado, tipoTreino, grupoMuscular, exercicios, series, repeticoes, observacoes)
-        val index = indiceEditando
+        val treino = Treino(
+            aluno = alunoSelecionado,
+            tipoTreino = tipoTreino,
+            grupoMuscular = grupoMuscular,
+            exercicios = exercicios,
+            series = series,
+            repeticoes = repeticoes,
+            observacoes = observacoes,
+            exerciciosSelecionados = exerciciosSelecionados.toList()
+        )
 
+        val index = indiceEditando
         if (index == null) treinos.add(treino) else treinos[index] = treino
 
         limparFormulario()
@@ -102,7 +131,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Monte treinos vinculados aos alunos com cards objetivos, organizados por tipo, aluno e grupo muscular.",
+            text = "Monte fichas vinculando alunos a exercícios prontos. Use busca e filtros para encontrar treinos rapidamente.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
@@ -118,20 +147,47 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             Text(text = "Cadastrar treino")
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        ListHeader(
-            title = "Treinos cadastrados",
-            count = treinos.size
+        OutlinedTextField(
+            value = busca,
+            onValueChange = { busca = it },
+            label = { Text(text = "Pesquisar treino") },
+            placeholder = { Text(text = "Busque por aluno, tipo, grupo ou exercício") },
+            modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        if (treinos.isEmpty()) {
-            EmptyState(message = "Nenhum treino cadastrado ainda. Cadastre alunos primeiro e depois monte os treinos.")
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            grupos.chunked(4).forEach { linha ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    linha.forEach { grupo ->
+                        FilterChip(
+                            selected = filtroGrupo == grupo,
+                            onClick = { filtroGrupo = grupo },
+                            label = { Text(text = grupo) }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        ListHeader(
+            title = "Treinos encontrados",
+            count = treinosFiltrados.size
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (treinosFiltrados.isEmpty()) {
+            EmptyState(message = "Nenhum treino encontrado. Cadastre uma ficha ou ajuste busca e filtros.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                treinos.forEachIndexed { index, treino ->
+                treinosFiltrados.forEach { treino ->
+                    val index = treinos.indexOf(treino)
                     TreinoCard(
                         treino = treino,
                         onEditarClick = {
@@ -142,12 +198,14 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                             series = treino.series
                             repeticoes = treino.repeticoes
                             observacoes = treino.observacoes
+                            exerciciosSelecionados.clear()
+                            exerciciosSelecionados.addAll(treino.exerciciosSelecionados)
                             mensagemErro = ""
                             indiceEditando = index
                             mostrarFormulario = true
                         },
                         onExcluirClick = {
-                            treinos.removeAt(index)
+                            treinos.remove(treino)
                             limparFormulario()
                         }
                     )
@@ -212,19 +270,53 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
                         value = grupoMuscular,
                         onValueChange = { grupoMuscular = it },
                         label = { Text(text = "Grupo muscular") },
-                        placeholder = { Text(text = "Ex: Peito e tríceps") },
+                        placeholder = { Text(text = "Ex: Peito") },
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(text = "Exercícios prontos", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (exerciciosProntos.isEmpty()) {
+                        OutlinedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+                        ) {
+                            Text(
+                                text = "Nenhum exercício pronto cadastrado. Use a aba Exercícios para criar sua biblioteca.",
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            exerciciosProntos.forEach { exercicio ->
+                                val selecionado = exerciciosSelecionados.contains(exercicio.nome)
+                                FilterChip(
+                                    selected = selecionado,
+                                    onClick = {
+                                        if (selecionado) {
+                                            exerciciosSelecionados.remove(exercicio.nome)
+                                        } else {
+                                            exerciciosSelecionados.add(exercicio.nome)
+                                        }
+                                    },
+                                    label = { Text(text = "${exercicio.nome} • ${exercicio.categoria}") }
+                                )
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     OutlinedTextField(
                         value = exercicios,
                         onValueChange = { exercicios = it },
-                        label = { Text(text = "Exercícios") },
-                        placeholder = { Text(text = "Ex: Supino, crucifixo, tríceps corda") },
+                        label = { Text(text = "Exercícios extras") },
+                        placeholder = { Text(text = "Use apenas se quiser adicionar algo manualmente") },
                         modifier = Modifier.fillMaxWidth(),
-                        minLines = 3
+                        minLines = 2
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -294,13 +386,12 @@ fun TreinoCard(
         avatarText = treino.tipoTreino,
         title = treino.tipoTreino,
         subtitle = "Aluno: ${treino.aluno}",
-        status = {
-            StatusBadge(text = treino.grupoMuscular.ifBlank { "Treino" })
-        },
+        status = { StatusBadge(text = treino.grupoMuscular.ifBlank { "Treino" }) },
         onEditarClick = onEditarClick,
         onExcluirClick = onExcluirClick
     ) {
-        InfoLine(label = "Exercícios", value = treino.exercicios)
+        InfoLine(label = "Exercícios prontos", value = treino.exerciciosSelecionados.joinToString(", "))
+        InfoLine(label = "Exercícios extras", value = treino.exercicios)
         InfoLine(label = "Séries", value = treino.series)
         InfoLine(label = "Repetições", value = treino.repeticoes)
         InfoLine(label = "Observações", value = treino.observacoes)
