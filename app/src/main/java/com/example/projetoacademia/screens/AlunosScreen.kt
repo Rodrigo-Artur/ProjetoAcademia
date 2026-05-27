@@ -41,6 +41,7 @@ import com.example.projetoacademia.model.Aluno
 fun AlunosScreen(onVoltarClick: () -> Unit) {
     val alunos = AppData.alunos
     val planos = AppData.planos
+    val treinadores = AppData.treinadores
 
     var nome by remember { mutableStateOf("") }
     var cpf by remember { mutableStateOf("") }
@@ -51,6 +52,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
     var ativo by remember { mutableStateOf(true) }
     var fotoUri by remember { mutableStateOf("") }
     var planoSelecionado by remember { mutableStateOf("") }
+    var treinadorSelecionado by remember { mutableStateOf("") }
 
     var busca by remember { mutableStateOf("") }
     var filtroStatus by remember { mutableStateOf("Todos") }
@@ -63,7 +65,8 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
                 aluno.nome.contains(busca, ignoreCase = true) ||
                 aluno.cpf.contains(busca, ignoreCase = true) ||
                 aluno.objetivo.contains(busca, ignoreCase = true) ||
-                aluno.plano.contains(busca, ignoreCase = true)
+                aluno.plano.contains(busca, ignoreCase = true) ||
+                aluno.treinador.contains(busca, ignoreCase = true)
 
         val bateStatus = when (filtroStatus) {
             "Ativos" -> aluno.ativo
@@ -84,6 +87,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         ativo = true
         fotoUri = ""
         planoSelecionado = ""
+        treinadorSelecionado = ""
         mensagemErro = ""
         indiceEditando = null
         mostrarFormulario = false
@@ -100,9 +104,20 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo, fotoUri, planoSelecionado)
-        val index = indiceEditando
+        val aluno = Aluno(
+            nome = nome,
+            cpf = cpf,
+            telefone = telefone,
+            dataNascimento = dataNascimento,
+            email = email,
+            objetivo = objetivo,
+            ativo = ativo,
+            fotoUri = fotoUri,
+            plano = planoSelecionado,
+            treinador = treinadorSelecionado
+        )
 
+        val index = indiceEditando
         if (index == null) alunos.add(aluno) else alunos[index] = aluno
 
         limparFormulario()
@@ -121,7 +136,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Pesquise alunos, filtre por status, vincule planos e cadastre fotos para identificar perfis rapidamente.",
+            text = "Pesquise alunos, filtre por status, vincule planos e selecione o treinador responsável.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
@@ -143,7 +158,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             value = busca,
             onValueChange = { busca = it },
             label = { Text(text = "Pesquisar aluno") },
-            placeholder = { Text(text = "Busque por nome, CPF, objetivo ou plano") },
+            placeholder = { Text(text = "Busque por nome, CPF, objetivo, plano ou treinador") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -186,6 +201,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
                             ativo = aluno.ativo
                             fotoUri = aluno.fotoUri
                             planoSelecionado = aluno.plano
+                            treinadorSelecionado = aluno.treinador
                             mensagemErro = ""
                             indiceEditando = index
                             mostrarFormulario = true
@@ -301,6 +317,28 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    Text(text = "Treinador", style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (treinadores.isEmpty()) {
+                        Text(
+                            text = "Nenhum treinador cadastrado ainda.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            treinadores.forEach { treinador ->
+                                FilterChip(
+                                    selected = treinadorSelecionado == treinador.nome,
+                                    onClick = { treinadorSelecionado = treinador.nome },
+                                    label = { Text(text = treinador.nome) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = ativo, onCheckedChange = { ativo = it })
                         Text(text = "Aluno ativo")
@@ -354,6 +392,7 @@ fun AlunoCard(
         }
 
         InfoLine(label = "Plano", value = aluno.plano)
+        InfoLine(label = "Treinador", value = aluno.treinador)
         InfoLine(label = "CPF", value = aluno.cpf)
         InfoLine(label = "Telefone", value = aluno.telefone)
         InfoLine(label = "Nascimento", value = aluno.dataNascimento)
