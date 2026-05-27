@@ -1,8 +1,6 @@
 package com.example.projetoacademia.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,11 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -30,9 +24,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.components.EmptyState
+import com.example.projetoacademia.components.InfoLine
+import com.example.projetoacademia.components.ListHeader
+import com.example.projetoacademia.components.PrettyCard
+import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Aluno
 
@@ -79,11 +77,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         val aluno = Aluno(nome, cpf, telefone, dataNascimento, email, objetivo, ativo)
         val index = indiceEditando
 
-        if (index == null) {
-            alunos.add(aluno)
-        } else {
-            alunos[index] = aluno
-        }
+        if (index == null) alunos.add(aluno) else alunos[index] = aluno
 
         limparFormulario()
     }
@@ -101,8 +95,9 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Cadastre novos alunos, acompanhe seus dados e use o menu de cada card para editar ou apagar registros.",
+            text = "Visualize os alunos em cards, acompanhe o status e use o menu de três pontos para editar ou apagar registros.",
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
@@ -118,18 +113,17 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Alunos cadastrados",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+        ListHeader(
+            title = "Alunos cadastrados",
+            count = alunos.size
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
         if (alunos.isEmpty()) {
-            Text(text = "Nenhum aluno cadastrado ainda.")
+            EmptyState(message = "Nenhum aluno cadastrado ainda. Clique em Cadastrar aluno para começar.")
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 alunos.forEachIndexed { index, aluno ->
                     AlunoCard(
                         aluno = aluno,
@@ -260,63 +254,22 @@ fun AlunoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
-    var menuAberto by remember { mutableStateOf(false) }
-
-    val corDeFundo = if (aluno.ativo) {
-        MaterialTheme.colorScheme.surfaceVariant
-    } else {
-        Color(0xFFFFCDD2)
-    }
-
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(corDeFundo)
-                .padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = aluno.nome, style = MaterialTheme.typography.titleMedium)
-                Text(text = "CPF: ${aluno.cpf}")
-
-                if (aluno.telefone.isNotBlank()) Text(text = "Telefone: ${aluno.telefone}")
-                if (aluno.dataNascimento.isNotBlank()) Text(text = "Nascimento: ${aluno.dataNascimento}")
-                if (aluno.email.isNotBlank()) Text(text = "Email: ${aluno.email}")
-                if (aluno.objetivo.isNotBlank()) Text(text = "Objetivo: ${aluno.objetivo}")
-
-                Text(
-                    text = if (aluno.ativo) "Status: Ativo" else "Status: Inativo",
-                    color = if (aluno.ativo) Color(0xFF2E7D32) else Color(0xFFC62828)
-                )
-            }
-
-            Box {
-                IconButton(onClick = { menuAberto = true }) {
-                    Text(text = "⋮")
-                }
-
-                DropdownMenu(
-                    expanded = menuAberto,
-                    onDismissRequest = { menuAberto = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text(text = "Editar") },
-                        onClick = {
-                            menuAberto = false
-                            onEditarClick()
-                        }
-                    )
-
-                    DropdownMenuItem(
-                        text = { Text(text = "Apagar") },
-                        onClick = {
-                            menuAberto = false
-                            onExcluirClick()
-                        }
-                    )
-                }
-            }
-        }
+    PrettyCard(
+        avatarText = aluno.nome,
+        title = aluno.nome,
+        subtitle = aluno.objetivo.ifBlank { "Objetivo não informado" },
+        status = {
+            StatusBadge(
+                text = if (aluno.ativo) "Ativo" else "Inativo",
+                alert = !aluno.ativo
+            )
+        },
+        onEditarClick = onEditarClick,
+        onExcluirClick = onExcluirClick
+    ) {
+        InfoLine(label = "CPF", value = aluno.cpf)
+        InfoLine(label = "Telefone", value = aluno.telefone)
+        InfoLine(label = "Nascimento", value = aluno.dataNascimento)
+        InfoLine(label = "Email", value = aluno.email)
     }
 }
