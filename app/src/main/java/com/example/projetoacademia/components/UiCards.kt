@@ -1,5 +1,6 @@
 package com.example.projetoacademia.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -44,17 +46,19 @@ fun ListHeader(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground
         )
 
         Surface(
             shape = RoundedCornerShape(50),
-            color = MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.55f))
         ) {
             Text(
                 text = count.toString(),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
             )
         }
@@ -66,12 +70,14 @@ fun EmptyState(message: String) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.72f)
+        ),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))
     ) {
         Text(
             text = message,
             style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -85,14 +91,15 @@ fun EntityAvatar(text: String) {
     Surface(
         modifier = Modifier.size(52.dp),
         shape = RoundedCornerShape(18.dp),
-        color = MaterialTheme.colorScheme.primaryContainer
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.65f))
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = initials(text),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimaryContainer
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -104,10 +111,11 @@ fun InfoLine(
     value: String
 ) {
     if (value.isNotBlank()) {
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = "$label: $value",
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -118,24 +126,26 @@ fun StatusBadge(
     alert: Boolean = false
 ) {
     val background = if (alert) {
-        MaterialTheme.colorScheme.errorContainer
+        MaterialTheme.colorScheme.error.copy(alpha = 0.16f)
     } else {
-        MaterialTheme.colorScheme.secondaryContainer
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)
     }
 
     val content = if (alert) {
-        MaterialTheme.colorScheme.onErrorContainer
+        MaterialTheme.colorScheme.error
     } else {
-        MaterialTheme.colorScheme.onSecondaryContainer
+        MaterialTheme.colorScheme.primary
     }
 
     Surface(
         shape = RoundedCornerShape(50),
-        color = background
+        color = background,
+        border = BorderStroke(1.dp, content.copy(alpha = 0.45f))
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.SemiBold,
             color = content,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
@@ -154,7 +164,8 @@ fun CardActionMenu(
             Text(
                 text = "⋮",
                 style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -193,10 +204,12 @@ fun PrettyCard(
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 7.dp),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)
+        ),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.07f))
     ) {
         Row(
             modifier = Modifier
@@ -218,7 +231,8 @@ fun PrettyCard(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         if (!subtitle.isNullOrBlank()) {
