@@ -1,6 +1,5 @@
 package com.example.projetoacademia.screens
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +18,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +36,7 @@ import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.components.VideoPickerField
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Exercicio
+import com.example.projetoacademia.navigation.AppCreateActions
 
 @Composable
 fun ExerciciosScreen(onVoltarClick: () -> Unit) {
@@ -60,9 +61,7 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
                 exercicio.nome.contains(busca, ignoreCase = true) ||
                 exercicio.categoria.contains(busca, ignoreCase = true) ||
                 exercicio.descricao.contains(busca, ignoreCase = true)
-
         val bateCategoria = filtroCategoria == "Todos" || exercicio.categoria == filtroCategoria
-
         bateBusca && bateCategoria
     }
 
@@ -82,24 +81,22 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
             mensagemErro = "Nome do exercício é obrigatório"
             return
         }
-
         if (categoria.isBlank()) {
             mensagemErro = "Informe a categoria do exercício"
             return
         }
 
-        val exercicio = Exercicio(
-            nome = nome,
-            categoria = categoria,
-            descricao = descricao,
-            fotoUri = fotoUri,
-            videoUri = videoUri
-        )
-
+        val exercicio = Exercicio(nome, categoria, descricao, fotoUri, videoUri)
         val index = indiceEditando
         if (index == null) exercicios.add(exercicio) else exercicios[index] = exercicio
-
         limparFormulario()
+    }
+
+    LaunchedEffect(AppCreateActions.exercicios) {
+        if (AppCreateActions.exercicios > 0) {
+            limparFormulario()
+            mostrarFormulario = true
+        }
     }
 
     Column(
@@ -115,23 +112,11 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Crie exercícios prontos com categoria, descrição, imagem e vídeo para vincular rapidamente nas fichas de treino.",
+            text = "Crie exercícios prontos com categoria, descrição, imagem e vídeo. Use o botão + para adicionar.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
-
-        Button(
-            onClick = {
-                limparFormulario()
-                mostrarFormulario = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Cadastrar exercício")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = busca,
@@ -170,7 +155,7 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         if (exerciciosFiltrados.isEmpty()) {
-            EmptyState(message = "Nenhum exercício encontrado. Cadastre exercícios ou ajuste a pesquisa e os filtros.")
+            EmptyState(message = "Nenhum exercício encontrado. Toque no botão + para cadastrar ou ajuste os filtros.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 exerciciosFiltrados.forEach { exercicio ->
@@ -196,11 +181,8 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
             }
         }
 
-        TextButton(
-            onClick = onVoltarClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Voltar ao início")
+        TextButton(onClick = onVoltarClick, modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Voltar ao dashboard")
         }
     }
 
@@ -218,9 +200,7 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         isError = mensagemErro.contains("Nome")
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
                         value = categoria,
                         onValueChange = { categoria = it },
@@ -229,9 +209,7 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         isError = mensagemErro.contains("categoria", ignoreCase = true)
                     )
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf("Peito", "Costas", "Pernas").forEach { item ->
                             FilterChip(
@@ -241,9 +219,7 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
                             )
                         }
                     }
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
                         value = descricao,
                         onValueChange = { descricao = it },
@@ -252,23 +228,18 @@ fun ExerciciosScreen(onVoltarClick: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         minLines = 3
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     ImagePickerField(
                         label = "Selecionar foto do exercício",
                         imageUri = fotoUri,
                         onImageSelected = { fotoUri = it }
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     VideoPickerField(
                         label = "Selecionar vídeo do exercício",
                         videoUri = videoUri,
                         onVideoSelected = { videoUri = it }
                     )
-
                     if (mensagemErro.isNotBlank()) {
                         Text(
                             text = mensagemErro,
@@ -310,9 +281,7 @@ fun ExercicioCard(
             Spacer(modifier = Modifier.height(8.dp))
             MediaImagePreview(imageUri = exercicio.fotoUri)
         }
-
         InfoLine(label = "Categoria", value = exercicio.categoria)
-
         if (exercicio.videoUri.isNotBlank()) {
             InfoLine(label = "Vídeo", value = "Arquivo selecionado")
         }
