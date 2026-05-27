@@ -1,6 +1,5 @@
 package com.example.projetoacademia.navigation
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -12,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -52,6 +49,14 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val tituloAtual = obterTituloDaTela(currentRoute)
+    val mostrarFab = currentRoute in listOf(
+        Routes.ALUNOS,
+        Routes.PLANOS,
+        Routes.EXERCICIOS,
+        Routes.TREINADORES,
+        Routes.TREINOS,
+        Routes.PAGAMENTOS
+    )
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -97,11 +102,38 @@ fun AppNavigation() {
                         }
                     }
                 )
-
+            }
+        },
+        bottomBar = {
+            Column(
+                modifier = Modifier.background(
+                    Brush.verticalGradient(
+                        listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color(0xFF07131C)
+                        )
+                    )
+                )
+            ) {
                 NavigationCarousel(
                     currentRoute = currentRoute,
                     onNavigate = { route -> navegarPeloMenu(navController, route) }
                 )
+            }
+        },
+        floatingActionButton = {
+            if (mostrarFab) {
+                FloatingActionButton(
+                    onClick = { AppCreateActions.solicitarCriacao(currentRoute) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Text(
+                        text = "+",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
         }
     ) { innerPadding ->
