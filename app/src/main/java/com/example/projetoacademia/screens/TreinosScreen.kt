@@ -2,6 +2,7 @@ package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,9 +15,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -26,7 +29,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Treino
@@ -77,16 +82,7 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val treino = Treino(
-            aluno = alunoSelecionado,
-            tipoTreino = tipoTreino,
-            grupoMuscular = grupoMuscular,
-            exercicios = exercicios,
-            series = series,
-            repeticoes = repeticoes,
-            observacoes = observacoes
-        )
-
+        val treino = Treino(alunoSelecionado, tipoTreino, grupoMuscular, exercicios, series, repeticoes, observacoes)
         val index = indiceEditando
 
         if (index == null) {
@@ -104,10 +100,14 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(text = "Treinos", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Gerenciamento de treinos",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
 
         Text(
-            text = "Cadastre, edite e remova treinos vinculados aos alunos.",
+            text = "Monte treinos vinculados aos alunos e mantenha os exercícios sempre atualizados.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
@@ -124,7 +124,12 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(text = "Treinos cadastrados", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Treinos cadastrados",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         if (treinos.isEmpty()) {
@@ -159,20 +164,16 @@ fun TreinosScreen(onVoltarClick: () -> Unit) {
             onClick = onVoltarClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Voltar")
+            Text(text = "Voltar ao início")
         }
     }
 
     if (mostrarFormulario) {
         AlertDialog(
             onDismissRequest = { limparFormulario() },
-            title = {
-                Text(text = if (indiceEditando == null) "Cadastrar treino" else "Editar treino")
-            },
+            title = { Text(text = if (indiceEditando == null) "Cadastrar treino" else "Editar treino") },
             text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -294,30 +295,50 @@ fun TreinoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
+    var menuAberto by remember { mutableStateOf(false) }
+
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = treino.tipoTreino, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Aluno: ${treino.aluno}")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = treino.tipoTreino, style = MaterialTheme.typography.titleMedium)
+                Text(text = "Aluno: ${treino.aluno}")
 
-            if (treino.grupoMuscular.isNotBlank()) Text(text = "Grupo muscular: ${treino.grupoMuscular}")
-            if (treino.exercicios.isNotBlank()) Text(text = "Exercícios: ${treino.exercicios}")
-            if (treino.series.isNotBlank()) Text(text = "Séries: ${treino.series}")
-            if (treino.repeticoes.isNotBlank()) Text(text = "Repetições: ${treino.repeticoes}")
-            if (treino.observacoes.isNotBlank()) Text(text = "Observações: ${treino.observacoes}")
+                if (treino.grupoMuscular.isNotBlank()) Text(text = "Grupo muscular: ${treino.grupoMuscular}")
+                if (treino.exercicios.isNotBlank()) Text(text = "Exercícios: ${treino.exercicios}")
+                if (treino.series.isNotBlank()) Text(text = "Séries: ${treino.series}")
+                if (treino.repeticoes.isNotBlank()) Text(text = "Repetições: ${treino.repeticoes}")
+                if (treino.observacoes.isNotBlank()) Text(text = "Observações: ${treino.observacoes}")
+            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onEditarClick) {
-                    Text(text = "Editar")
+            Box {
+                IconButton(onClick = { menuAberto = true }) {
+                    Text(text = "⋮")
                 }
 
-                OutlinedButton(onClick = onExcluirClick) {
-                    Text(text = "Apagar")
+                DropdownMenu(
+                    expanded = menuAberto,
+                    onDismissRequest = { menuAberto = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Editar") },
+                        onClick = {
+                            menuAberto = false
+                            onEditarClick()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text(text = "Apagar") },
+                        onClick = {
+                            menuAberto = false
+                            onExcluirClick()
+                        }
+                    )
                 }
             }
         }
