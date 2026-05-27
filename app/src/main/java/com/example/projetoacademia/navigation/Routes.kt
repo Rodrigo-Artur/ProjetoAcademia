@@ -5,6 +5,7 @@ object Routes {
     const val ALUNOS = "alunos"
     const val PLANOS = "planos"
     const val TREINOS = "treinos"
+    const val EXERCICIOS = "exercicios"
     const val PAGAMENTOS = "pagamentos"
     const val SOBRE = "sobre"
 }
