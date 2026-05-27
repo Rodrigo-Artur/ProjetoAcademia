@@ -3,6 +3,7 @@ package com.example.projetoacademia.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,9 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,8 +30,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Pagamento
@@ -128,10 +133,14 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
             .verticalScroll(rememberScrollState())
             .padding(24.dp)
     ) {
-        Text(text = "Pagamentos", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Gerenciamento de pagamentos",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold
+        )
 
         Text(
-            text = "Registre, edite e remova pagamentos vinculados aos alunos e planos.",
+            text = "Controle mensalidades, formas de pagamento e situações financeiras dos alunos.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
@@ -148,7 +157,12 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(text = "Pagamentos registrados", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "Pagamentos registrados",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold
+        )
+
         Spacer(modifier = Modifier.height(12.dp))
 
         if (pagamentos.isEmpty()) {
@@ -182,20 +196,16 @@ fun PagamentosScreen(onVoltarClick: () -> Unit) {
             onClick = onVoltarClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Voltar")
+            Text(text = "Voltar ao início")
         }
     }
 
     if (mostrarFormulario) {
         AlertDialog(
             onDismissRequest = { limparFormulario() },
-            title = {
-                Text(text = if (indiceEditando == null) "Registrar pagamento" else "Editar pagamento")
-            },
+            title = { Text(text = if (indiceEditando == null) "Registrar pagamento" else "Editar pagamento") },
             text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState())
-                ) {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -331,41 +341,61 @@ fun PagamentoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
+    var menuAberto by remember { mutableStateOf(false) }
+
     val pagamentoAtrasado = pagamento.situacao == "Atrasado"
     val corDeFundo = if (pagamentoAtrasado) Color(0xFFFFCDD2) else MaterialTheme.colorScheme.surfaceVariant
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(corDeFundo)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = pagamento.aluno, style = MaterialTheme.typography.titleMedium)
-            Text(text = "Plano: ${pagamento.plano}")
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = pagamento.aluno, style = MaterialTheme.typography.titleMedium)
+                Text(text = "Plano: ${pagamento.plano}")
 
-            if (pagamento.data.isNotBlank()) Text(text = "Data: ${pagamento.data}")
+                if (pagamento.data.isNotBlank()) Text(text = "Data: ${pagamento.data}")
 
-            Text(text = "Valor: R$ ${String.format("%.2f", pagamento.valor)}")
+                Text(text = "Valor: R$ ${String.format("%.2f", pagamento.valor)}")
 
-            if (pagamento.formaPagamento.isNotBlank()) {
-                Text(text = "Forma de pagamento: ${pagamento.formaPagamento}")
-            }
-
-            Text(
-                text = "Situação: ${pagamento.situacao}",
-                color = if (pagamentoAtrasado) Color(0xFFC62828) else Color(0xFF2E7D32)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onEditarClick) {
-                    Text(text = "Editar")
+                if (pagamento.formaPagamento.isNotBlank()) {
+                    Text(text = "Forma de pagamento: ${pagamento.formaPagamento}")
                 }
 
-                OutlinedButton(onClick = onExcluirClick) {
-                    Text(text = "Apagar")
+                Text(
+                    text = "Situação: ${pagamento.situacao}",
+                    color = if (pagamentoAtrasado) Color(0xFFC62828) else Color(0xFF2E7D32)
+                )
+            }
+
+            Box {
+                IconButton(onClick = { menuAberto = true }) {
+                    Text(text = "⋮")
+                }
+
+                DropdownMenu(
+                    expanded = menuAberto,
+                    onDismissRequest = { menuAberto = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(text = "Editar") },
+                        onClick = {
+                            menuAberto = false
+                            onEditarClick()
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = { Text(text = "Apagar") },
+                        onClick = {
+                            menuAberto = false
+                            onExcluirClick()
+                        }
+                    )
                 }
             }
         }
