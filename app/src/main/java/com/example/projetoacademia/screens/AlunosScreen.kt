@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -60,6 +61,38 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         mostrarFormulario = false
     }
 
+    fun salvarAluno() {
+        if (nome.isBlank()) {
+            mensagemErro = "Nome é obrigatório"
+            return
+        }
+
+        if (cpf.isBlank()) {
+            mensagemErro = "CPF é obrigatório"
+            return
+        }
+
+        val aluno = Aluno(
+            nome = nome,
+            cpf = cpf,
+            telefone = telefone,
+            dataNascimento = dataNascimento,
+            email = email,
+            objetivo = objetivo,
+            ativo = ativo
+        )
+
+        val index = indiceEditando
+
+        if (index == null) {
+            alunos.add(aluno)
+        } else {
+            alunos[index] = aluno
+        }
+
+        limparFormulario()
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -67,7 +100,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             .padding(24.dp)
     ) {
         Text(
-            text = if (indiceEditando == null) "Alunos" else "Editar Aluno",
+            text = "Alunos",
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -77,143 +110,17 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
-        if (!mostrarFormulario && indiceEditando == null) {
-            Button(
-                onClick = { mostrarFormulario = true },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Cadastrar aluno")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = {
+                limparFormulario()
+                mostrarFormulario = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Cadastrar aluno")
         }
 
-        if (mostrarFormulario || indiceEditando != null) {
-            OutlinedTextField(
-                value = nome,
-                onValueChange = { nome = it },
-                label = { Text(text = "Nome") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = mensagemErro.contains("Nome")
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = cpf,
-                onValueChange = { cpf = it },
-                label = { Text(text = "CPF") },
-                modifier = Modifier.fillMaxWidth(),
-                isError = mensagemErro.contains("CPF")
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = telefone,
-                onValueChange = { telefone = it },
-                label = { Text(text = "Telefone") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = dataNascimento,
-                onValueChange = { dataNascimento = it },
-                label = { Text(text = "Data de nascimento") },
-                placeholder = { Text(text = "Ex: 10/05/2000") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text(text = "Email") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            OutlinedTextField(
-                value = objetivo,
-                onValueChange = { objetivo = it },
-                label = { Text(text = "Objetivo") },
-                placeholder = { Text(text = "Ex: Hipertrofia") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = ativo,
-                    onCheckedChange = { ativo = it }
-                )
-
-                Text(text = "Aluno ativo")
-            }
-
-            if (mensagemErro.isNotBlank()) {
-                Text(
-                    text = mensagemErro,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = {
-                    if (nome.isBlank()) {
-                        mensagemErro = "Nome é obrigatório"
-                        return@Button
-                    }
-
-                    if (cpf.isBlank()) {
-                        mensagemErro = "CPF é obrigatório"
-                        return@Button
-                    }
-
-                    val aluno = Aluno(
-                        nome = nome,
-                        cpf = cpf,
-                        telefone = telefone,
-                        dataNascimento = dataNascimento,
-                        email = email,
-                        objetivo = objetivo,
-                        ativo = ativo
-                    )
-
-                    val index = indiceEditando
-
-                    if (index == null) {
-                        alunos.add(aluno)
-                    } else {
-                        alunos[index] = aluno
-                    }
-
-                    limparFormulario()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = if (indiceEditando == null) "Salvar aluno" else "Atualizar aluno")
-            }
-
-            OutlinedButton(
-                onClick = { limparFormulario() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            ) {
-                Text(text = "Cancelar")
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+        Spacer(modifier = Modifier.height(24.dp))
 
         Text(
             text = "Alunos cadastrados",
@@ -256,6 +163,105 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         ) {
             Text(text = "Voltar")
         }
+    }
+
+    if (mostrarFormulario) {
+        AlertDialog(
+            onDismissRequest = { limparFormulario() },
+            title = {
+                Text(text = if (indiceEditando == null) "Cadastrar aluno" else "Editar aluno")
+            },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    OutlinedTextField(
+                        value = nome,
+                        onValueChange = { nome = it },
+                        label = { Text(text = "Nome") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = mensagemErro.contains("Nome")
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = cpf,
+                        onValueChange = { cpf = it },
+                        label = { Text(text = "CPF") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = mensagemErro.contains("CPF")
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = telefone,
+                        onValueChange = { telefone = it },
+                        label = { Text(text = "Telefone") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = dataNascimento,
+                        onValueChange = { dataNascimento = it },
+                        label = { Text(text = "Data de nascimento") },
+                        placeholder = { Text(text = "Ex: 10/05/2000") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text(text = "Email") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = objetivo,
+                        onValueChange = { objetivo = it },
+                        label = { Text(text = "Objetivo") },
+                        placeholder = { Text(text = "Ex: Hipertrofia") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = ativo,
+                            onCheckedChange = { ativo = it }
+                        )
+
+                        Text(text = "Aluno ativo")
+                    }
+
+                    if (mensagemErro.isNotBlank()) {
+                        Text(
+                            text = mensagemErro,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = { salvarAluno() }) {
+                    Text(text = if (indiceEditando == null) "Salvar" else "Atualizar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { limparFormulario() }) {
+                    Text(text = "Cancelar")
+                }
+            }
+        )
     }
 }
 
