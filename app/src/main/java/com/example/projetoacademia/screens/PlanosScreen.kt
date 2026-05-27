@@ -2,6 +2,7 @@ package com.example.projetoacademia.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,47 +13,60 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Plano
 
 @Composable
 fun PlanosScreen(
     onVoltarClick: () -> Unit
 ) {
-    //aqui guarda a lista de planos
-    val planos = remember {
-        mutableStateListOf<Plano>()
+    val planos = AppData.planos
+
+    var nome by remember { mutableStateOf("") }
+    var valor by remember { mutableStateOf("") }
+    var duracao by remember { mutableStateOf("") }
+    var descricao by remember { mutableStateOf("") }
+
+    var mensagemErro by remember { mutableStateOf("") }
+    var indiceEditando by remember { mutableStateOf<Int?>(null) }
+    var mostrarFormulario by remember { mutableStateOf(false) }
+
+    if (!mostrarFormulario && indiceEditando == null) {
+        Button(
+            onClick = {
+                mostrarFormulario = true
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Cadastrar plano")
+        }
+        if (mostrarFormulario || indiceEditando != null) {
+            fun limparFormulario() {
+                nome = ""
+                valor = ""
+                duracao = ""
+                descricao = ""
+                mensagemErro = ""
+                indiceEditando = null
+                mostrarFormulario = false
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 
-    var nome by remember {
-        mutableStateOf("")
-    }
-
-    var valor by remember {
-        mutableStateOf("")
-    }
-
-    var duracao by remember {
-        mutableStateOf("")
-    }
-
-    var descricao by remember {
-        mutableStateOf("")
-    }
-
-    var mensagemErro by remember {
-        mutableStateOf("")
-    }
+    
 
     Column(
         modifier = Modifier
@@ -61,27 +75,21 @@ fun PlanosScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = "Cadastro de Planos",
+            text = if (indiceEditando == null) "Cadastro de Planos" else "Editar Plano",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Text(
-            text = "Cadastre os planos disponíveis para os alunos.",
+            text = "Cadastre, edite e remova planos da academia.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
         OutlinedTextField(
             value = nome,
-            onValueChange = {
-                nome = it
-            },
-            label = {
-                Text(text = "Nome do plano")
-            },
-            placeholder = {
-                Text(text = "Ex: Mensal")
-            },
+            onValueChange = { nome = it },
+            label = { Text(text = "Nome do plano") },
+            placeholder = { Text(text = "Ex: Mensal") },
             modifier = Modifier.fillMaxWidth(),
             isError = mensagemErro.contains("Nome")
         )
@@ -90,15 +98,9 @@ fun PlanosScreen(
 
         OutlinedTextField(
             value = valor,
-            onValueChange = {
-                valor = it
-            },
-            label = {
-                Text(text = "Valor")
-            },
-            placeholder = {
-                Text(text = "Ex: 89.90")
-            },
+            onValueChange = { valor = it },
+            label = { Text(text = "Valor") },
+            placeholder = { Text(text = "Ex: 89.90") },
             modifier = Modifier.fillMaxWidth(),
             isError = mensagemErro.contains("valor", ignoreCase = true)
         )
@@ -107,15 +109,9 @@ fun PlanosScreen(
 
         OutlinedTextField(
             value = duracao,
-            onValueChange = {
-                duracao = it
-            },
-            label = {
-                Text(text = "Duração")
-            },
-            placeholder = {
-                Text(text = "Ex: 1 mês")
-            },
+            onValueChange = { duracao = it },
+            label = { Text(text = "Duração") },
+            placeholder = { Text(text = "Ex: 1 mês") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -123,15 +119,9 @@ fun PlanosScreen(
 
         OutlinedTextField(
             value = descricao,
-            onValueChange = {
-                descricao = it
-            },
-            label = {
-                Text(text = "Descrição")
-            },
-            placeholder = {
-                Text(text = "Ex: Acesso livre à musculação")
-            },
+            onValueChange = { descricao = it },
+            label = { Text(text = "Descrição") },
+            placeholder = { Text(text = "Ex: Acesso livre à musculação") },
             modifier = Modifier.fillMaxWidth(),
             minLines = 3
         )
@@ -149,9 +139,7 @@ fun PlanosScreen(
         Button(
             onClick = {
                 val valorConvertido = valor
-                    //aqui converte o , e . para numero
                     .replace(",", ".")
-                    //aqui interpreta letras no valor como nulo e cancela o cadsatro
                     .toDoubleOrNull()
 
                 if (nome.isBlank()) {
@@ -169,24 +157,41 @@ fun PlanosScreen(
                     return@Button
                 }
 
-                val novoPlano = Plano(
+                val plano = Plano(
                     nome = nome,
                     valor = valorConvertido,
                     duracao = duracao,
                     descricao = descricao
                 )
 
-                planos.add(novoPlano)
+                val index = indiceEditando
 
-                nome = ""
-                valor = ""
-                duracao = ""
-                descricao = ""
-                mensagemErro = ""
+                if (index == null) {
+                    planos.add(plano)
+                } else {
+                    planos[index] = plano
+                }
+
+                limparFormulario()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Cadastrar plano")
+            Text(
+                text = if (indiceEditando == null) "Cadastrar plano" else "Atualizar plano"
+            )
+        }
+
+        if (indiceEditando != null) {
+            OutlinedButton(
+                onClick = {
+                    limparFormulario()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Text(text = "Cancelar edição")
+            }
         }
 
         TextButton(
@@ -211,8 +216,23 @@ fun PlanosScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                planos.forEach { plano ->
-                    PlanoCard(plano = plano)
+                planos.forEachIndexed { index, plano ->
+                    PlanoCard(
+                        plano = plano,
+                        onEditarClick = {
+                            nome = plano.nome
+                            valor = plano.valor.toString()
+                            duracao = plano.duracao
+                            descricao = plano.descricao
+                            mensagemErro = ""
+                            indiceEditando = index
+                            mostrarFormulario = true
+                        },
+                        onExcluirClick = {
+                            planos.removeAt(index)
+                            limparFormulario()
+                        }
+                    )
                 }
             }
         }
@@ -221,7 +241,9 @@ fun PlanosScreen(
 
 @Composable
 fun PlanoCard(
-    plano: Plano
+    plano: Plano,
+    onEditarClick: () -> Unit,
+    onExcluirClick: () -> Unit
 ) {
     Card(
         modifier = Modifier.fillMaxWidth()
@@ -246,6 +268,20 @@ fun PlanoCard(
 
             if (plano.descricao.isNotBlank()) {
                 Text(text = "Descrição: ${plano.descricao}")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(onClick = onEditarClick) {
+                    Text(text = "Editar")
+                }
+
+                OutlinedButton(onClick = onExcluirClick) {
+                    Text(text = "Apagar")
+                }
             }
         }
     }

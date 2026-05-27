@@ -15,12 +15,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -28,48 +28,56 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Aluno
 
 @Composable
 fun AlunosScreen(
     onVoltarClick: () -> Unit
 ) {
-    //responsável por quardar a lista dos alunos
-    val alunos = remember {
-        mutableStateListOf<Aluno>()
-    }
-    //formulário
-    var nome by remember {
-        mutableStateOf("")
+    val alunos = AppData.alunos
+
+    var nome by remember { mutableStateOf("") }
+    var cpf by remember { mutableStateOf("") }
+    var telefone by remember { mutableStateOf("") }
+    var dataNascimento by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var objetivo by remember { mutableStateOf("") }
+    var ativo by remember { mutableStateOf(true) }
+
+    var mensagemErro by remember { mutableStateOf("") }
+    var indiceEditando by remember { mutableStateOf<Int?>(null) }
+    var mostrarFormulario by remember { mutableStateOf(false) }
+
+    if (!mostrarFormulario && indiceEditando == null) {
+    Button(
+        onClick = {
+            mostrarFormulario = true
+        },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(text = "Cadastrar aluno")
     }
 
-    var cpf by remember {
-        mutableStateOf("")
+    if (mostrarFormulario || indiceEditando != null) {
+        fun limparFormulario() {
+            nome = ""
+            cpf = ""
+            telefone = ""
+            dataNascimento = ""
+            email = ""
+            objetivo = ""
+            ativo = true
+            mensagemErro = ""
+            indiceEditando = null
+            mostrarFormulario = false
+        }
+}
+
+    Spacer(modifier = Modifier.height(24.dp))
     }
 
-    var telefone by remember {
-        mutableStateOf("")
-    }
-
-    var dataNascimento by remember {
-        mutableStateOf("")
-    }
-
-    var email by remember {
-        mutableStateOf("")
-    }
-
-    var objetivo by remember {
-        mutableStateOf("")
-    }
-
-    var ativo by remember {
-        mutableStateOf(true)
-    }
-
-    var mensagemErro by remember {
-        mutableStateOf("")
-    }
+    
 
     Column(
         modifier = Modifier
@@ -78,24 +86,20 @@ fun AlunosScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = "Cadastro de Alunos",
+            text = if (indiceEditando == null) "Cadastro de Alunos" else "Editar Aluno",
             style = MaterialTheme.typography.headlineMedium
         )
 
         Text(
-            text = "Preencha os dados do aluno e toque em cadastrar.",
+            text = "Cadastre, edite e remova alunos da academia.",
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
         OutlinedTextField(
             value = nome,
-            onValueChange = {
-                nome = it
-            },
-            label = {
-                Text(text = "Nome")
-            },
+            onValueChange = { nome = it },
+            label = { Text(text = "Nome") },
             modifier = Modifier.fillMaxWidth(),
             isError = mensagemErro.contains("Nome")
         )
@@ -104,12 +108,8 @@ fun AlunosScreen(
 
         OutlinedTextField(
             value = cpf,
-            onValueChange = {
-                cpf = it
-            },
-            label = {
-                Text(text = "CPF")
-            },
+            onValueChange = { cpf = it },
+            label = { Text(text = "CPF") },
             modifier = Modifier.fillMaxWidth(),
             isError = mensagemErro.contains("CPF")
         )
@@ -118,12 +118,8 @@ fun AlunosScreen(
 
         OutlinedTextField(
             value = telefone,
-            onValueChange = {
-                telefone = it
-            },
-            label = {
-                Text(text = "Telefone")
-            },
+            onValueChange = { telefone = it },
+            label = { Text(text = "Telefone") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -131,15 +127,9 @@ fun AlunosScreen(
 
         OutlinedTextField(
             value = dataNascimento,
-            onValueChange = {
-                dataNascimento = it
-            },
-            label = {
-                Text(text = "Data de nascimento")
-            },
-            placeholder = {
-                Text(text = "Ex: 10/05/2000")
-            },
+            onValueChange = { dataNascimento = it },
+            label = { Text(text = "Data de nascimento") },
+            placeholder = { Text(text = "Ex: 10/05/2000") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -147,12 +137,8 @@ fun AlunosScreen(
 
         OutlinedTextField(
             value = email,
-            onValueChange = {
-                email = it
-            },
-            label = {
-                Text(text = "Email")
-            },
+            onValueChange = { email = it },
+            label = { Text(text = "Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -160,15 +146,9 @@ fun AlunosScreen(
 
         OutlinedTextField(
             value = objetivo,
-            onValueChange = {
-                objetivo = it
-            },
-            label = {
-                Text(text = "Objetivo")
-            },
-            placeholder = {
-                Text(text = "Ex: Hipertrofia, emagrecimento, resistência")
-            },
+            onValueChange = { objetivo = it },
+            label = { Text(text = "Objetivo") },
+            placeholder = { Text(text = "Ex: Hipertrofia") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -179,9 +159,7 @@ fun AlunosScreen(
         ) {
             Checkbox(
                 checked = ativo,
-                onCheckedChange = {
-                    ativo = it
-                }
+                onCheckedChange = { ativo = it }
             )
 
             Text(text = "Aluno ativo")
@@ -199,7 +177,6 @@ fun AlunosScreen(
 
         Button(
             onClick = {
-                //aqui diz os campos que são obrigatórios e impede o cadastro
                 if (nome.isBlank()) {
                     mensagemErro = "Nome é obrigatório"
                     return@Button
@@ -210,7 +187,7 @@ fun AlunosScreen(
                     return@Button
                 }
 
-                val novoAluno = Aluno(
+                val aluno = Aluno(
                     nome = nome,
                     cpf = cpf,
                     telefone = telefone,
@@ -220,20 +197,34 @@ fun AlunosScreen(
                     ativo = ativo
                 )
 
-                alunos.add(novoAluno)
+                val index = indiceEditando
 
-                nome = ""
-                cpf = ""
-                telefone = ""
-                dataNascimento = ""
-                email = ""
-                objetivo = ""
-                ativo = true
-                mensagemErro = ""
+                if (index == null) {
+                    alunos.add(aluno)
+                } else {
+                    alunos[index] = aluno
+                }
+
+                limparFormulario()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Cadastrar aluno")
+            Text(
+                text = if (indiceEditando == null) "Cadastrar aluno" else "Atualizar aluno"
+            )
+        }
+
+        if (indiceEditando != null) {
+            OutlinedButton(
+                onClick = {
+                    limparFormulario()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Text(text = "Cancelar edição")
+            }
         }
 
         TextButton(
@@ -258,8 +249,26 @@ fun AlunosScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                alunos.forEach { aluno ->
-                    AlunoCard(aluno = aluno)
+                alunos.forEachIndexed { index, aluno ->
+                    AlunoCard(
+                        aluno = aluno,
+                        onEditarClick = {
+                            nome = aluno.nome
+                            cpf = aluno.cpf
+                            telefone = aluno.telefone
+                            dataNascimento = aluno.dataNascimento
+                            email = aluno.email
+                            objetivo = aluno.objetivo
+                            ativo = aluno.ativo
+                            mensagemErro = ""
+                            indiceEditando = index
+                            mostrarFormulario = true
+                        },
+                        onExcluirClick = {
+                            alunos.removeAt(index)
+                            limparFormulario()
+                        }
+                    )
                 }
             }
         }
@@ -268,9 +277,10 @@ fun AlunosScreen(
 
 @Composable
 fun AlunoCard(
-    aluno: Aluno
+    aluno: Aluno,
+    onEditarClick: () -> Unit,
+    onExcluirClick: () -> Unit
 ) {
-    //destade de cor quando o aluno está inativo
     val corDeFundo = if (aluno.ativo) {
         MaterialTheme.colorScheme.surfaceVariant
     } else {
@@ -278,9 +288,7 @@ fun AlunoCard(
     }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(corDeFundo)
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -315,6 +323,20 @@ fun AlunoCard(
                 text = if (aluno.ativo) "Status: Ativo" else "Status: Inativo",
                 color = if (aluno.ativo) Color(0xFF2E7D32) else Color(0xFFC62828)
             )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(onClick = onEditarClick) {
+                    Text(text = "Editar")
+                }
+
+                OutlinedButton(onClick = onExcluirClick) {
+                    Text(text = "Apagar")
+                }
+            }
         }
     }
-} 
+}
