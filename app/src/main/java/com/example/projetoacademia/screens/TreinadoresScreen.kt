@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ import com.example.projetoacademia.components.PrettyCard
 import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Treinador
+import com.example.projetoacademia.navigation.AppCreateActions
 
 @Composable
 fun TreinadoresScreen(onVoltarClick: () -> Unit) {
@@ -88,18 +90,17 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
             return
         }
 
-        val treinador = Treinador(
-            nome = nome,
-            especialidade = especialidade,
-            telefone = telefone,
-            email = email,
-            ativo = ativo
-        )
-
+        val treinador = Treinador(nome, especialidade, telefone, email, ativo)
         val index = indiceEditando
         if (index == null) treinadores.add(treinador) else treinadores[index] = treinador
-
         limparFormulario()
+    }
+
+    LaunchedEffect(AppCreateActions.treinadores) {
+        if (AppCreateActions.treinadores > 0) {
+            limparFormulario()
+            mostrarFormulario = true
+        }
     }
 
     Column(
@@ -115,23 +116,11 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Cadastre treinadores, monitore especialidades e veja quantos alunos cada profissional acompanha.",
+            text = "Monitore especialidades e veja quantos alunos cada profissional acompanha. Use o botão + para criar.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
-
-        Button(
-            onClick = {
-                limparFormulario()
-                mostrarFormulario = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Cadastrar treinador")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = busca,
@@ -163,7 +152,7 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         if (treinadoresFiltrados.isEmpty()) {
-            EmptyState(message = "Nenhum treinador encontrado. Cadastre um treinador ou ajuste a pesquisa.")
+            EmptyState(message = "Nenhum treinador encontrado. Toque no botão + para cadastrar ou ajuste a pesquisa.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 treinadoresFiltrados.forEach { treinador ->
@@ -190,10 +179,7 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
             }
         }
 
-        TextButton(
-            onClick = onVoltarClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        TextButton(onClick = onVoltarClick, modifier = Modifier.fillMaxWidth()) {
             Text(text = "Voltar ao dashboard")
         }
     }
@@ -211,9 +197,7 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         isError = mensagemErro.contains("Nome")
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
                         value = especialidade,
                         onValueChange = { especialidade = it },
@@ -222,32 +206,25 @@ fun TreinadoresScreen(onVoltarClick: () -> Unit) {
                         modifier = Modifier.fillMaxWidth(),
                         isError = mensagemErro.contains("Especialidade")
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
                         value = telefone,
                         onValueChange = { telefone = it },
                         label = { Text(text = "Telefone") },
                         modifier = Modifier.fillMaxWidth()
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     OutlinedTextField(
                         value = email,
                         onValueChange = { email = it },
                         label = { Text(text = "Email") },
                         modifier = Modifier.fillMaxWidth()
                     )
-
                     Spacer(modifier = Modifier.height(12.dp))
-
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = ativo, onCheckedChange = { ativo = it })
                         Text(text = "Treinador ativo")
                     }
-
                     if (mensagemErro.isNotBlank()) {
                         Text(
                             text = mensagemErro,
