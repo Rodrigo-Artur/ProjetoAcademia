@@ -9,5 +9,6 @@ data class Aluno(
     val objetivo: String,
     val ativo: Boolean,
     val fotoUri: String = "",
-    val plano: String = ""
+    val plano: String = "",
+    val treinador: String = ""
 )
