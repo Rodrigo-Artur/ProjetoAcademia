@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import com.example.projetoacademia.components.PrettyCard
 import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Aluno
+import com.example.projetoacademia.navigation.AppCreateActions
 
 @Composable
 fun AlunosScreen(onVoltarClick: () -> Unit) {
@@ -123,6 +125,13 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         limparFormulario()
     }
 
+    LaunchedEffect(AppCreateActions.alunos) {
+        if (AppCreateActions.alunos > 0) {
+            limparFormulario()
+            mostrarFormulario = true
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -136,23 +145,11 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         )
 
         Text(
-            text = "Pesquise alunos, filtre por status, vincule planos e selecione o treinador responsável.",
+            text = "Pesquise alunos, filtre por status, vincule planos e selecione o treinador responsável. Use o botão + para criar.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
-
-        Button(
-            onClick = {
-                limparFormulario()
-                mostrarFormulario = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Cadastrar aluno")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = busca,
@@ -184,7 +181,7 @@ fun AlunosScreen(onVoltarClick: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         if (alunosFiltrados.isEmpty()) {
-            EmptyState(message = "Nenhum aluno encontrado. Cadastre um aluno ou ajuste sua pesquisa.")
+            EmptyState(message = "Nenhum aluno encontrado. Toque no botão + para cadastrar ou ajuste sua pesquisa.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 alunosFiltrados.forEach { aluno ->
