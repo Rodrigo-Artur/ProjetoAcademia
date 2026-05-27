@@ -31,9 +31,7 @@ import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Treino
 
 @Composable
-fun TreinosScreen(
-    onVoltarClick: () -> Unit
-) {
+fun TreinosScreen(onVoltarClick: () -> Unit) {
     val alunos = AppData.alunos
     val treinos = AppData.treinos
 
@@ -49,34 +47,18 @@ fun TreinosScreen(
     var indiceEditando by remember { mutableStateOf<Int?>(null) }
     var mostrarFormulario by remember { mutableStateOf(false) }
 
-    if (!mostrarFormulario && indiceEditando == null) {
-    Button(
-        onClick = {
-            mostrarFormulario = true
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text(text = "Cadastrar treino")
+    fun limparFormulario() {
+        alunoSelecionado = ""
+        tipoTreino = ""
+        grupoMuscular = ""
+        exercicios = ""
+        series = ""
+        repeticoes = ""
+        observacoes = ""
+        mensagemErro = ""
+        indiceEditando = null
+        mostrarFormulario = false
     }
-    if (mostrarFormulario || indiceEditando != null) {
-        fun limparFormulario() {
-            alunoSelecionado = ""
-            tipoTreino = ""
-            grupoMuscular = ""
-            exercicios = ""
-            series = ""
-            repeticoes = ""
-            observacoes = ""
-            mensagemErro = ""
-            indiceEditando = null
-            mostrarFormulario = false
-        }
-    }
-
-    Spacer(modifier = Modifier.height(24.dp))
-    }
-
-    
 
     Column(
         modifier = Modifier
@@ -85,7 +67,7 @@ fun TreinosScreen(
             .padding(24.dp)
     ) {
         Text(
-            text = if (indiceEditando == null) "Cadastro de Treinos" else "Editar Treino",
+            text = if (indiceEditando == null) "Treinos" else "Editar Treino",
             style = MaterialTheme.typography.headlineMedium
         )
 
@@ -95,197 +77,181 @@ fun TreinosScreen(
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
-        Text(
-            text = "Aluno",
-            style = MaterialTheme.typography.titleMedium
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        if (alunos.isEmpty()) {
-            OutlinedCard(
-                modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+        if (!mostrarFormulario && indiceEditando == null) {
+            Button(
+                onClick = { mostrarFormulario = true },
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Cadastre pelo menos um aluno antes de criar um treino.",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Text(text = "Cadastrar treino")
             }
-        } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                alunos.forEach { aluno ->
-                    FilterChip(
-                        selected = alunoSelecionado == aluno.nome,
-                        onClick = {
-                            alunoSelecionado = aluno.nome
-                        },
-                        label = {
-                            Text(text = aluno.nome)
-                        }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        if (mostrarFormulario || indiceEditando != null) {
+            Text(text = "Aluno", style = MaterialTheme.typography.titleMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (alunos.isEmpty()) {
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error)
+                ) {
+                    Text(
+                        text = "Cadastre pelo menos um aluno antes de criar um treino.",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(16.dp)
                     )
                 }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    alunos.forEach { aluno ->
+                        FilterChip(
+                            selected = alunoSelecionado == aluno.nome,
+                            onClick = { alunoSelecionado = aluno.nome },
+                            label = { Text(text = aluno.nome) }
+                        )
+                    }
+                }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = tipoTreino,
-            onValueChange = { tipoTreino = it },
-            label = { Text(text = "Tipo de treino") },
-            placeholder = { Text(text = "Ex: Hipertrofia") },
-            modifier = Modifier.fillMaxWidth(),
-            isError = mensagemErro.contains("tipo", ignoreCase = true)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = grupoMuscular,
-            onValueChange = { grupoMuscular = it },
-            label = { Text(text = "Grupo muscular") },
-            placeholder = { Text(text = "Ex: Peito e tríceps") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        OutlinedTextField(
-            value = exercicios,
-            onValueChange = { exercicios = it },
-            label = { Text(text = "Exercícios") },
-            placeholder = { Text(text = "Ex: Supino, crucifixo, tríceps corda") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedTextField(
-                value = series,
-                onValueChange = { series = it },
-                label = { Text(text = "Séries") },
-                placeholder = { Text(text = "Ex: 4") },
-                modifier = Modifier.weight(1f)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = repeticoes,
-                onValueChange = { repeticoes = it },
-                label = { Text(text = "Repetições") },
-                placeholder = { Text(text = "Ex: 12") },
-                modifier = Modifier.weight(1f)
+                value = tipoTreino,
+                onValueChange = { tipoTreino = it },
+                label = { Text(text = "Tipo de treino") },
+                placeholder = { Text(text = "Ex: Hipertrofia") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = mensagemErro.contains("tipo", ignoreCase = true)
             )
-        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = observacoes,
-            onValueChange = { observacoes = it },
-            label = { Text(text = "Observações") },
-            placeholder = { Text(text = "Ex: Aumentar carga a cada semana") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
-        )
-
-        if (mensagemErro.isNotBlank()) {
-            Text(
-                text = mensagemErro,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 8.dp)
+            OutlinedTextField(
+                value = grupoMuscular,
+                onValueChange = { grupoMuscular = it },
+                label = { Text(text = "Grupo muscular") },
+                placeholder = { Text(text = "Ex: Peito e tríceps") },
+                modifier = Modifier.fillMaxWidth()
             )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        Button(
-            onClick = {
-                if (alunos.isEmpty()) {
-                    mensagemErro = "É necessário cadastrar um aluno antes de cadastrar treinos"
-                    return@Button
-                }
+            OutlinedTextField(
+                value = exercicios,
+                onValueChange = { exercicios = it },
+                label = { Text(text = "Exercícios") },
+                placeholder = { Text(text = "Ex: Supino, crucifixo, tríceps corda") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
+            )
 
-                if (alunoSelecionado.isBlank()) {
-                    mensagemErro = "Selecione um aluno"
-                    return@Button
-                }
+            Spacer(modifier = Modifier.height(12.dp))
 
-                if (tipoTreino.isBlank()) {
-                    mensagemErro = "Informe o tipo de treino"
-                    return@Button
-                }
-
-                val treino = Treino(
-                    aluno = alunoSelecionado,
-                    tipoTreino = tipoTreino,
-                    grupoMuscular = grupoMuscular,
-                    exercicios = exercicios,
-                    series = series,
-                    repeticoes = repeticoes,
-                    observacoes = observacoes
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = series,
+                    onValueChange = { series = it },
+                    label = { Text(text = "Séries") },
+                    placeholder = { Text(text = "Ex: 4") },
+                    modifier = Modifier.weight(1f)
                 )
 
-                val index = indiceEditando
+                OutlinedTextField(
+                    value = repeticoes,
+                    onValueChange = { repeticoes = it },
+                    label = { Text(text = "Repetições") },
+                    placeholder = { Text(text = "Ex: 12") },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
-                if (index == null) {
-                    treinos.add(treino)
-                } else {
-                    treinos[index] = treino
-                }
+            Spacer(modifier = Modifier.height(12.dp))
 
-                limparFormulario()
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(
-                text = if (indiceEditando == null) "Cadastrar treino" else "Atualizar treino"
+            OutlinedTextField(
+                value = observacoes,
+                onValueChange = { observacoes = it },
+                label = { Text(text = "Observações") },
+                placeholder = { Text(text = "Ex: Aumentar carga a cada semana") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
             )
-        }
 
-        if (indiceEditando != null) {
-            OutlinedButton(
+            if (mensagemErro.isNotBlank()) {
+                Text(
+                    text = mensagemErro,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
                 onClick = {
+                    if (alunos.isEmpty()) {
+                        mensagemErro = "É necessário cadastrar um aluno antes de cadastrar treinos"
+                        return@Button
+                    }
+
+                    if (alunoSelecionado.isBlank()) {
+                        mensagemErro = "Selecione um aluno"
+                        return@Button
+                    }
+
+                    if (tipoTreino.isBlank()) {
+                        mensagemErro = "Informe o tipo de treino"
+                        return@Button
+                    }
+
+                    val treino = Treino(
+                        aluno = alunoSelecionado,
+                        tipoTreino = tipoTreino,
+                        grupoMuscular = grupoMuscular,
+                        exercicios = exercicios,
+                        series = series,
+                        repeticoes = repeticoes,
+                        observacoes = observacoes
+                    )
+
+                    val index = indiceEditando
+
+                    if (index == null) {
+                        treinos.add(treino)
+                    } else {
+                        treinos[index] = treino
+                    }
+
                     limparFormulario()
                 },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = if (indiceEditando == null) "Salvar treino" else "Atualizar treino")
+            }
+
+            OutlinedButton(
+                onClick = { limparFormulario() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp)
             ) {
-                Text(text = "Cancelar edição")
+                Text(text = "Cancelar")
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        TextButton(
-            onClick = onVoltarClick,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Voltar")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            text = "Treinos cadastrados",
-            style = MaterialTheme.typography.titleLarge
-        )
-
+        Text(text = "Treinos cadastrados", style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(12.dp))
 
         if (treinos.isEmpty()) {
             Text(text = "Nenhum treino cadastrado ainda.")
         } else {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 treinos.forEachIndexed { index, treino ->
                     TreinoCard(
                         treino = treino,
@@ -309,6 +275,13 @@ fun TreinosScreen(
                 }
             }
         }
+
+        TextButton(
+            onClick = onVoltarClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(text = "Voltar")
+        }
     }
 }
 
@@ -318,46 +291,24 @@ fun TreinoCard(
     onEditarClick: () -> Unit,
     onExcluirClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            Text(
-                text = treino.tipoTreino,
-                style = MaterialTheme.typography.titleMedium
-            )
-
+            Text(text = treino.tipoTreino, style = MaterialTheme.typography.titleMedium)
             Text(text = "Aluno: ${treino.aluno}")
 
-            if (treino.grupoMuscular.isNotBlank()) {
-                Text(text = "Grupo muscular: ${treino.grupoMuscular}")
-            }
-
-            if (treino.exercicios.isNotBlank()) {
-                Text(text = "Exercícios: ${treino.exercicios}")
-            }
-
-            if (treino.series.isNotBlank()) {
-                Text(text = "Séries: ${treino.series}")
-            }
-
-            if (treino.repeticoes.isNotBlank()) {
-                Text(text = "Repetições: ${treino.repeticoes}")
-            }
-
-            if (treino.observacoes.isNotBlank()) {
-                Text(text = "Observações: ${treino.observacoes}")
-            }
+            if (treino.grupoMuscular.isNotBlank()) Text(text = "Grupo muscular: ${treino.grupoMuscular}")
+            if (treino.exercicios.isNotBlank()) Text(text = "Exercícios: ${treino.exercicios}")
+            if (treino.series.isNotBlank()) Text(text = "Séries: ${treino.series}")
+            if (treino.repeticoes.isNotBlank()) Text(text = "Repetições: ${treino.repeticoes}")
+            if (treino.observacoes.isNotBlank()) Text(text = "Observações: ${treino.observacoes}")
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onEditarClick) {
                     Text(text = "Editar")
                 }
