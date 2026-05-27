@@ -1,21 +1,19 @@
 package com.example.projetoacademia.navigation
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.DrawerValue
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,142 +29,108 @@ import com.example.projetoacademia.screens.PagamentosScreen
 import com.example.projetoacademia.screens.PlanosScreen
 import com.example.projetoacademia.screens.SobreScreen
 import com.example.projetoacademia.screens.TreinosScreen
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
-
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val tituloAtual = obterTituloDaTela(currentRoute)
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Sistema Academia",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Text(
-                        text = "Use este menu para navegar entre as páginas.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    HorizontalDivider()
-
-                    DrawerMenuItem("Início", currentRoute == Routes.HOME) {
-                        navegarPeloMenu(navController, Routes.HOME)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Alunos", currentRoute == Routes.ALUNOS) {
-                        navegarPeloMenu(navController, Routes.ALUNOS)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Planos", currentRoute == Routes.PLANOS) {
-                        navegarPeloMenu(navController, Routes.PLANOS)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Exercícios", currentRoute == Routes.EXERCICIOS) {
-                        navegarPeloMenu(navController, Routes.EXERCICIOS)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Treinos", currentRoute == Routes.TREINOS) {
-                        navegarPeloMenu(navController, Routes.TREINOS)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Pagamentos", currentRoute == Routes.PAGAMENTOS) {
-                        navegarPeloMenu(navController, Routes.PAGAMENTOS)
-                        scope.launch { drawerState.close() }
-                    }
-
-                    DrawerMenuItem("Sobre", currentRoute == Routes.SOBRE) {
-                        navegarPeloMenu(navController, Routes.SOBRE)
-                        scope.launch { drawerState.close() }
-                    }
-                }
-            }
-        }
-    ) {
-        Scaffold(
-            topBar = {
+    Scaffold(
+        topBar = {
+            Column {
                 TopAppBar(
                     title = {
                         Text(
                             text = "Sistema Academia - $tituloAtual",
                             fontWeight = FontWeight.Bold
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Text(text = "☰", fontWeight = FontWeight.Bold)
-                        }
                     }
                 )
+
+                NavigationCarousel(
+                    currentRoute = currentRoute,
+                    onNavigate = { route -> navegarPeloMenu(navController, route) }
+                )
             }
-        ) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = Routes.HOME,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(Routes.HOME) {
-                    HomeScreen()
-                }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Routes.HOME,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Routes.HOME) {
+                HomeScreen(
+                    onNavigateToAlunos = { navegarPeloMenu(navController, Routes.ALUNOS) },
+                    onNavigateToPlanos = { navegarPeloMenu(navController, Routes.PLANOS) },
+                    onNavigateToPagamentos = { navegarPeloMenu(navController, Routes.PAGAMENTOS) }
+                )
+            }
 
-                composable(Routes.ALUNOS) {
-                    AlunosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.ALUNOS) {
+                AlunosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
 
-                composable(Routes.PLANOS) {
-                    PlanosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.PLANOS) {
+                PlanosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
 
-                composable(Routes.EXERCICIOS) {
-                    ExerciciosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.EXERCICIOS) {
+                ExerciciosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
 
-                composable(Routes.TREINOS) {
-                    TreinosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.TREINOS) {
+                TreinosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
 
-                composable(Routes.PAGAMENTOS) {
-                    PagamentosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.PAGAMENTOS) {
+                PagamentosScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
+            }
 
-                composable(Routes.SOBRE) {
-                    SobreScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
-                }
+            composable(Routes.SOBRE) {
+                SobreScreen(onVoltarClick = { navegarPeloMenu(navController, Routes.HOME) })
             }
         }
     }
 }
 
 @Composable
-fun DrawerMenuItem(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit
+fun NavigationCarousel(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit
 ) {
-    NavigationDrawerItem(
-        label = { Text(text = text) },
-        selected = selected,
-        onClick = onClick,
-        modifier = Modifier.padding(top = 8.dp)
+    val itens = listOf(
+        "Dashboard" to Routes.HOME,
+        "Alunos" to Routes.ALUNOS,
+        "Planos" to Routes.PLANOS,
+        "Exercícios" to Routes.EXERCICIOS,
+        "Treinos" to Routes.TREINOS,
+        "Pagamentos" to Routes.PAGAMENTOS,
+        "Sobre" to Routes.SOBRE
     )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        itens.forEach { item ->
+            FilterChip(
+                selected = currentRoute == item.second,
+                onClick = { onNavigate(item.second) },
+                label = {
+                    Text(
+                        text = item.first,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+            )
+        }
+    }
 }
 
 fun navegarPeloMenu(
@@ -182,12 +146,13 @@ fun navegarPeloMenu(
 
 fun obterTituloDaTela(route: String?): String {
     return when (route) {
+        Routes.HOME -> "Dashboard"
         Routes.ALUNOS -> "Alunos"
         Routes.PLANOS -> "Planos"
         Routes.EXERCICIOS -> "Exercícios"
         Routes.TREINOS -> "Treinos"
         Routes.PAGAMENTOS -> "Pagamentos"
         Routes.SOBRE -> "Sobre"
-        else -> "Início"
+        else -> "Dashboard"
     }
 }
