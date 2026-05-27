@@ -16,6 +16,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,6 +31,7 @@ import com.example.projetoacademia.components.PrettyCard
 import com.example.projetoacademia.components.StatusBadge
 import com.example.projetoacademia.data.AppData
 import com.example.projetoacademia.model.Plano
+import com.example.projetoacademia.navigation.AppCreateActions
 
 @Composable
 fun PlanosScreen(onVoltarClick: () -> Unit) {
@@ -80,6 +82,13 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         limparFormulario()
     }
 
+    LaunchedEffect(AppCreateActions.planos) {
+        if (AppCreateActions.planos > 0) {
+            limparFormulario()
+            mostrarFormulario = true
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,18 +108,6 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
             modifier = Modifier.padding(top = 8.dp, bottom = 24.dp)
         )
 
-        Button(
-            onClick = {
-                limparFormulario()
-                mostrarFormulario = true
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text(text = "Cadastrar plano")
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
         ListHeader(
             title = "Planos cadastrados",
             count = planos.size
@@ -119,7 +116,7 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
         Spacer(modifier = Modifier.height(12.dp))
 
         if (planos.isEmpty()) {
-            EmptyState(message = "Nenhum plano cadastrado ainda. Clique em Cadastrar plano para criar o primeiro.")
+            EmptyState(message = "Nenhum plano cadastrado ainda. Toque no botão + para criar o primeiro.")
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 planos.forEachIndexed { index, plano ->
@@ -147,7 +144,7 @@ fun PlanosScreen(onVoltarClick: () -> Unit) {
             onClick = onVoltarClick,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Voltar ao início")
+            Text(text = "Voltar ao dashboard")
         }
     }
 
